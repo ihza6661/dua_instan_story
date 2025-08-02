@@ -17,9 +17,22 @@ class ProductImageController extends Controller
         $validated = $request->validated();
         $uploadedImages = [];
 
+        $existingImageCount = $product->images()->count();
+
         foreach ($validated['images'] as $index => $imageFile) {
+            $providedAltText = $validated['alt_texts'][$index] ?? null;
+
+            if (empty($providedAltText)) {
+                $imageNumber = $existingImageCount + $index + 1;
+                $altText = ($imageNumber === 1)
+                    ? $product->name
+                    : "{$product->name} - Gambar {$imageNumber}";
+            } else {
+                $altText = $providedAltText;
+            }
+
             $imageData = [
-                'alt_text' => $validated['alt_texts'][$index] ?? null,
+                'alt_text' => $altText,
                 'is_featured' => isset($validated['is_featured_index']) && $validated['is_featured_index'] == $index,
             ];
 
