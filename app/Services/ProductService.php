@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ProductService
 {
@@ -24,5 +25,20 @@ class ProductService
         //     throw new \Exception('Produk tidak dapat dihapus karena sudah ada dalam pesanan.');
         // }
         $product->delete();
+    }
+
+    public function getPaginatedActiveProducts(): LengthAwarePaginator
+    {
+        return Product::with('category')
+            ->where('is_active', true)
+            ->latest()
+            ->paginate(10);
+    }
+
+    public function findPubliclyVisibleProduct(int $productId): Product
+    {
+        return Product::with('category')
+            ->where('is_active', true)
+            ->findOrFail($productId);
     }
 }

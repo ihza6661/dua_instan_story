@@ -3,47 +3,28 @@
 namespace App\Http\Controllers\Api\V1\Customer;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Resources\ProductResource;
+use App\Services\ProductService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    protected $productService;
+
+    public function __construct(ProductService $productService)
     {
-        //
+        $this->productService = $productService;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function index(): AnonymousResourceCollection
     {
-        //
+        $products = $this->productService->getPaginatedActiveProducts();
+        return ProductResource::collection($products);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(string $id): ProductResource
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $product = $this->productService->findPubliclyVisibleProduct((int)$id);
+        return new ProductResource($product);
     }
 }
