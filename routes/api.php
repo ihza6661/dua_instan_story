@@ -15,4 +15,7 @@ Route::prefix('v1/customer')->name('customer.v1.')->group(function () {
 Route::prefix('v1/admin')->name('admin.v1.')->group(function () {
     Route::apiResource('product-categories', Admin\ProductCategoryController::class);
     Route::apiResource('products', Admin\ProductController::class);
+    Route::apiResource('products.images', Admin\ProductImageController::class)
+        ->only(['store', 'destroy'])
+        ->shallow();
 });

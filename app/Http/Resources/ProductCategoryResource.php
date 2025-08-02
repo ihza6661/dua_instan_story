@@ -14,6 +14,7 @@ class ProductCategoryResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'image_url' => $this->image_url,
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }

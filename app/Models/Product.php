@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Product extends Model
 {
@@ -33,6 +34,16 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function featuredImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)->where('is_featured', true);
+    }
+
+    public function firstImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)->oldestOfMany();
     }
 
     public function options()

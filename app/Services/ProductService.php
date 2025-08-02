@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class ProductService
 {
@@ -25,6 +28,23 @@ class ProductService
         //     throw new \Exception('Produk tidak dapat dihapus karena sudah ada dalam pesanan.');
         // }
         $product->delete();
+    }
+
+    public function addImageToProduct(Product $product, UploadedFile $imageFile, array $data): ProductImage
+    {
+        $path = $imageFile->store('product-images', 'public');
+
+        return $product->images()->create([
+            'image_url' => $path,
+            'alt_text' => $data['alt_text'] ?? null,
+            'is_featured' => $data['is_featured'] ?? false,
+        ]);
+    }
+
+    public function deleteProductImage(ProductImage $image): void
+    {
+        Storage::disk('public')->delete($image->image_url);
+        $image->delete();
     }
 
     public function getPaginatedActiveProducts(): LengthAwarePaginator

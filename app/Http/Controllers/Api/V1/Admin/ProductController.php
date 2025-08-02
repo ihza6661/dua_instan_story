@@ -15,7 +15,7 @@ class ProductController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $products = Product::with('category')->latest()->get();
+        $products = Product::with(['category', 'featuredImage', 'firstImage'])->latest()->get();
         return ProductResource::collection($products);
     }
 
@@ -30,7 +30,8 @@ class ProductController extends Controller
 
     public function show(Product $product): ProductResource
     {
-        return new ProductResource($product->load('category'));
+        $product->load(['category', 'images']);
+        return new ProductResource($product);
     }
 
     public function update(UpdateRequest $request, Product $product, ProductService $productService): JsonResponse
