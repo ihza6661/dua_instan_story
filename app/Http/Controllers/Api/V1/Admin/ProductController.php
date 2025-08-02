@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Admin\Product\StoreRequest;
+use App\Http\Requests\Api\V1\Admin\Product\UpdateRequest;
+use App\Http\Resources\ProductResource;
+use App\Models\Product;
+use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+
+class ProductController extends Controller
+{
+    public function index(): AnonymousResourceCollection
+    {
+        $products = Product::with('category')->latest()->get();
+        return ProductResource::collection($products);
+    }
+
+    public function store(StoreRequest $request, ProductService $productService): JsonResponse
+    {
+        $product = $productService->createProduct($request->validated());
+        return response()->json([
+            'message' => 'Produk berhasil dibuat.',
+            'data' => new ProductResource($product->load('category')),
+        ], 201);
+    }
+
+    public function show(Product $product): ProductResource
+    {
+        return new ProductResource($product->load('category'));
+    }
+
+    public function update(UpdateRequest $request, Product $product, ProductService $productService): JsonResponse
+    {
+        $updatedProduct = $productService->updateProduct($product, $request->validated());
+        return response()->json([
+            'message' => 'Produk berhasil diperbarui.',
+            'data' => new ProductResource($updatedProduct->load('category')),
+        ]);
+    }
+
+    public function destroy(Product $product, ProductService $productService): JsonResponse
+    {
+        $productService->deleteProduct($product);
+        return response()->json([
+            'message' => 'Produk berhasil dihapus.',
+        ]);
+    }
+}
