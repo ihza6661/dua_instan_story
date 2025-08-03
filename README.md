@@ -59,23 +59,21 @@
    ```bash
    git clone https://your-repository-url.git
    cd dua-insan-story-api
-````
 
 2. **Install dependencies**
 
    ```bash
    composer install
-   ```
 3. **Siapkan environment**
 
    ```bash
    cp .env.example .env
-   ```
+
 4. **Generate app key**
 
    ```bash
    php artisan key:generate
-   ```
+
 5. **Konfigurasi database**
    Edit `.env`:
 
@@ -83,24 +81,23 @@
    DB_DATABASE=nama_database
    DB_USERNAME=user_db
    DB_PASSWORD=password_db
-   ```
+
 6. **Migrasi & seeder**
 
    ```bash
    php artisan migrate:fresh --seed
-   ```
+
 7. **Link storage**
 
    ```bash
    php artisan storage:link
-   ```
+
 8. **Jalankan server**
 
    ```bash
    php artisan serve
-   ```
 
-   Akses di `http://localhost:8000`
+   Akses di `http://127.0.0.1:8000/api/v1/`
 
 ---
 
