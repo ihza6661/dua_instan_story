@@ -1,0 +1,664 @@
+openapi: 3.0.3
+info:
+  title: Dua Insan Story API - Pelanggan
+  description: Dokumentasi API lengkap untuk alur kerja sisi pelanggan, mulai dari melihat produk hingga checkout.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+    description: Server Pengembangan Lokal
+
+tags:
+  - name: Autentikasi
+    description: Endpoint untuk registrasi, login, dan logout.
+  - name: Kategori Produk
+    description: Endpoint publik untuk melihat kategori produk.
+  - name: Produk
+    description: Endpoint publik untuk melihat dan mencari produk.
+  - name: Keranjang Belanja
+    description: Mengelola keranjang belanja untuk tamu dan pengguna terdaftar.
+  - name: Checkout
+    description: Memproses keranjang belanja menjadi pesanan (memerlukan login).
+
+# ===============================================================
+# PATHS (DEFINISI ENDPOINT)
+# ===============================================================
+paths:
+  # ------------------ AUTENTIKASI ------------------
+  /register:
+    post:
+      tags:
+        - Autentikasi
+      summary: Registrasi pengguna baru sebagai 'customer'
+      requestBody:
+        $ref: "#/components/requestBodies/RegisterBody"
+      responses:
+        "201":
+          $ref: "#/components/responses/UserCreated"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /login:
+    post:
+      tags:
+        - Autentikasi
+      summary: Login pengguna untuk mendapatkan API Token
+      requestBody:
+        $ref: "#/components/requestBodies/LoginBody"
+      responses:
+        "200":
+          description: Login berhasil. Mengembalikan data user dan token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginSuccessResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /logout:
+    post:
+      tags:
+        - Autentikasi
+      summary: Logout pengguna (membatalkan token saat ini)
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Logout berhasil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessMessage"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  # ------------------ KATEGORI PRODUK (CUSTOMER) ------------------
+  /customer/product-categories:
+    get:
+      tags:
+        - Kategori Produk
+      summary: Melihat daftar kategori yang memiliki produk aktif
+      responses:
+        "200":
+          description: Daftar kategori berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProductCategory"
+
+  /customer/product-categories/{productCategoryId}:
+    get:
+      tags:
+        - Kategori Produk
+      summary: Melihat detail satu kategori produk
+      parameters:
+        - $ref: "#/components/parameters/ProductCategoryId"
+      responses:
+        "200":
+          description: Detail kategori berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ProductCategory"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  # ------------------ PRODUK (CUSTOMER) ------------------
+  /customer/products:
+    get:
+      tags:
+        - Produk
+      summary: Melihat daftar produk aktif dengan filter dan pencarian
+      parameters:
+        - name: search
+          in: query
+          description: Kata kunci untuk mencari produk berdasarkan nama, SKU, atau deskripsi.
+          required: false
+          schema:
+            type: string
+            example: "elegan"
+        - name: category
+          in: query
+          description: Filter produk berdasarkan slug kategori.
+          required: false
+          schema:
+            type: string
+            example: "undangan-pernikahan"
+      responses:
+        "200":
+          description: Daftar produk berhasil diambil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedProducts"
+
+  /customer/products/{productId}:
+    get:
+      tags:
+        - Produk
+      summary: Melihat detail lengkap satu produk
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: Detail produk berhasil diambil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetailResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  # ------------------ KERANJANG BELANJA ------------------
+  /cart:
+    get:
+      tags:
+        - Keranjang Belanja
+      summary: Melihat isi keranjang saat ini
+      description: Dapat diakses oleh pengguna tamu (dengan header X-Session-ID) atau pengguna login (dengan Bearer Token). Jika diakses pertama kali oleh tamu, akan membuat keranjang baru dan mengembalikan session ID di header respons.
+      parameters:
+        - $ref: "#/components/parameters/SessionIdHeader"
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Isi keranjang berhasil diambil.
+          headers:
+            X-Session-ID:
+              $ref: "#/components/headers/SessionIdHeader"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+    delete:
+      tags:
+        - Keranjang Belanja
+      summary: Mengosongkan seluruh isi keranjang
+      parameters:
+        - $ref: "#/components/parameters/SessionIdHeader"
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Keranjang berhasil dikosongkan.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+
+  /cart/items:
+    post:
+      tags:
+        - Keranjang Belanja
+      summary: Menambah item ke keranjang
+      parameters:
+        - $ref: "#/components/parameters/SessionIdHeader"
+      security:
+        - sanctum: []
+      requestBody:
+        $ref: "#/components/requestBodies/StoreCartItemBody"
+      responses:
+        "201":
+          description: Item berhasil ditambahkan. Mengembalikan kondisi keranjang terbaru.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /cart/items/{cartItemId}:
+    patch:
+      tags:
+        - Keranjang Belanja
+      summary: Mengubah jumlah (kuantitas) satu item
+      parameters:
+        - $ref: "#/components/parameters/CartItemId"
+        - $ref: "#/components/parameters/SessionIdHeader"
+      security:
+        - sanctum: []
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateCartItemBody"
+      responses:
+        "200":
+          description: Jumlah berhasil diubah. Mengembalikan kondisi keranjang terbaru.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+    delete:
+      tags:
+        - Keranjang Belanja
+      summary: Menghapus satu item dari keranjang
+      parameters:
+        - $ref: "#/components/parameters/CartItemId"
+        - $ref: "#/components/parameters/SessionIdHeader"
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Item berhasil dihapus. Mengembalikan kondisi keranjang terbaru.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  # ------------------ CHECKOUT ------------------
+  /checkout:
+    post:
+      tags:
+        - Checkout
+      summary: Memproses keranjang menjadi pesanan (Wajib Login)
+      security:
+        - sanctum: []
+      requestBody:
+        $ref: "#/components/requestBodies/CheckoutBody"
+      responses:
+        "201":
+          description: Pesanan berhasil dibuat dan menunggu pembayaran.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          description: "Bad Request (misal: keranjang kosong)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+# ===============================================================
+# COMPONENTS (BAGIAN YANG DAPAT DIGUNAKAN KEMBALI)
+# ===============================================================
+components:
+  # ------------------ SCHEMAS (Struktur Data) ------------------
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        full_name: { type: string, example: "Budi Pelanggan" }
+        email: { type: string, format: email, example: "budi@example.com" }
+        phone_number: { type: string, nullable: true, example: "08123456789" }
+        role: { type: string, enum: [admin, customer] }
+    UserResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Registrasi berhasil." }
+        data: { $ref: "#/components/schemas/User" }
+    LoginSuccessResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Login berhasil." }
+        data:
+          type: object
+          properties:
+            user: { $ref: "#/components/schemas/User" }
+            token: { type: string, example: "1|abcdefghijklmnopqrstuvwxyz" }
+
+    ProductCategory:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Undangan Pernikahan" }
+        slug: { type: string, example: "undangan-pernikahan" }
+        description:
+          {
+            type: string,
+            nullable: true,
+            example: "Berisi semua jenis undangan pernikahan.",
+          }
+
+    Product:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Undangan Elegan" }
+        description: { type: string, nullable: true }
+        base_price: { type: integer, example: 5000 }
+        min_order_quantity: { type: integer, example: 100 }
+        is_active: { type: boolean }
+        featured_image: { $ref: "#/components/schemas/ProductImage" }
+    ProductDetailResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: "#/components/schemas/Product"
+            - type: object
+              properties:
+                category: { $ref: "#/components/schemas/ProductCategory" }
+                images:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ProductImage"
+                options:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ProductOption"
+                add_ons:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/AddOn"
+
+    ProductImage:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        url:
+          {
+            type: string,
+            format: uri,
+            example: "http://localhost/storage/img.jpg",
+          }
+        alt_text:
+          {
+            type: string,
+            nullable: true,
+            example: "Tampak depan undangan elegan",
+          }
+        is_featured: { type: boolean, example: true }
+
+    ProductOption:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        price_adjustment: { type: integer, example: -5000 }
+        value: { $ref: "#/components/schemas/AttributeValue" }
+    AttributeValue:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        value: { type: string, example: "Kecil" }
+    AddOn:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Denah Lokasi" }
+        price: { type: integer, example: 15000 }
+
+    Cart:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        session_id: { type: string, format: uuid, nullable: true }
+        total_items: { type: integer, example: 150 }
+        subtotal: { type: integer, example: 40500000 }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+    CartResponse:
+      type: object
+      properties:
+        data: { $ref: "#/components/schemas/Cart" }
+    CartItem:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        quantity: { type: integer, example: 150 }
+        unit_price: { type: integer, example: 270000 }
+        sub_total: { type: integer, example: 40500000 }
+        customizations: { type: object }
+        product: { $ref: "#/components/schemas/Product" }
+
+    Order:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        order_number: { type: string, example: "INV-1754321098-ABCD" }
+        total_amount: { type: integer, example: 40500000 }
+        shipping_address: { type: string }
+        order_status: { type: string, example: "pending_payment" }
+        created_at: { type: string, format: "date-time" }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+    OrderItem:
+      type: object
+      properties:
+        id: { type: integer }
+        quantity: { type: integer }
+        unit_price: { type: integer }
+        sub_total: { type: integer }
+        product: { $ref: "#/components/schemas/Product" }
+        custom_data:
+          {
+            type: object,
+            nullable: true,
+            description: "Berisi data form checkout untuk item ini",
+          }
+
+    PaginatedProducts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        links: { type: object }
+        meta: { type: object }
+    SuccessMessage:
+      type: object
+      properties:
+        message: { type: string }
+    GenericError:
+      type: object
+      properties:
+        message: { type: string }
+    ErrorValidation:
+      type: object
+      properties:
+        message: { type: string, example: "The given data was invalid." }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  # ------------------ REQUEST BODIES ------------------
+  requestBodies:
+    RegisterBody:
+      description: Data untuk registrasi pengguna baru.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [full_name, email, password, password_confirmation]
+            properties:
+              full_name: { type: string, example: "Pengguna Baru" }
+              email:
+                { type: string, format: email, example: "baru@example.com" }
+              password:
+                { type: string, format: password, example: "password123" }
+              password_confirmation:
+                { type: string, format: password, example: "password123" }
+              phone_number: { type: string, example: "081234567890" }
+    LoginBody:
+      description: Kredensial untuk login.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, password]
+            properties:
+              email:
+                { type: string, format: email, example: "customer@example.com" }
+              password: { type: string, format: password, example: "password" }
+    StoreCartItemBody:
+      description: Data item yang akan ditambahkan ke keranjang.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [product_id, quantity]
+            properties:
+              product_id: { type: integer, example: 1 }
+              quantity: { type: integer, example: 100 }
+              options:
+                {
+                  type: array,
+                  items: { type: integer },
+                  example: [1, 3],
+                  description: "Array of product_option_id",
+                }
+              add_ons:
+                {
+                  type: array,
+                  items: { type: integer },
+                  example: [1],
+                  description: "Array of add_on_id",
+                }
+    UpdateCartItemBody:
+      description: Jumlah kuantitas baru.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [quantity]
+            properties:
+              quantity: { type: integer, example: 200 }
+    CheckoutBody:
+      description: Data lengkap untuk proses checkout.
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              [
+                shipping_address,
+                bride_full_name,
+                groom_full_name,
+                bride_nickname,
+                groom_nickname,
+                bride_parents,
+                groom_parents,
+                akad_date,
+                akad_time,
+                akad_location,
+                reception_date,
+                reception_time,
+                reception_location,
+              ]
+            properties:
+              shipping_address:
+                { type: string, example: "Jl. Khatulistiwa No. 1, Pontianak" }
+              bride_full_name: { type: string, example: "Adinda Putri" }
+              groom_full_name: { type: string, example: "Budi Setiawan" }
+              bride_nickname: { type: string, example: "Dinda" }
+              groom_nickname: { type: string, example: "Budi" }
+              bride_parents:
+                { type: string, example: "Bpk. Hermawan & Ibu Sri Lestari" }
+              groom_parents:
+                { type: string, example: "Bpk. Agus Salim & Ibu Wati" }
+              akad_date: { type: string, format: "date", example: "2025-12-20" }
+              akad_time: { type: string, example: "09:00 WIB" }
+              akad_location: { type: string, example: "Masjid Raya Mujahidin" }
+              reception_date:
+                { type: string, format: "date", example: "2025-12-21" }
+              reception_time: { type: string, example: "19:00 WIB" }
+              reception_location:
+                { type: string, example: "Gedung Pontianak Convention Center" }
+              gmaps_link: { type: string, format: "uri", nullable: true }
+              prewedding_photo: { type: string, format: binary, nullable: true }
+
+  # ------------------ PARAMETERS ------------------
+  parameters:
+    SessionIdHeader:
+      name: X-Session-ID
+      in: header
+      description: Session ID unik untuk pengguna tamu. Wajib disertakan jika pengguna belum login dan berinteraksi dengan keranjang.
+      required: false
+      schema: { type: string, format: uuid }
+    ProductId:
+      name: productId
+      in: path
+      description: ID dari produk.
+      required: true
+      schema: { type: integer }
+    ProductCategoryId:
+      name: productCategoryId
+      in: path
+      description: ID dari kategori produk.
+      required: true
+      schema: { type: integer }
+    CartItemId:
+      name: cartItemId
+      in: path
+      description: ID dari item di keranjang.
+      required: true
+      schema: { type: integer }
+
+  # ------------------ HEADERS ------------------
+  headers:
+    SessionIdHeader:
+      description: Session ID unik yang dibuat oleh server untuk pengguna tamu. Wajib disimpan oleh klien dan dikirim kembali di request keranjang berikutnya.
+      schema:
+        type: string
+
+  # ------------------ RESPONSES ------------------
+  responses:
+    UserCreated:
+      description: Registrasi berhasil.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UserResponse"
+    NotFoundError:
+      description: Sumber daya tidak ditemukan.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+    UnauthorizedError:
+      description: Autentikasi gagal (token tidak ada, tidak valid, atau kedaluwarsa).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+    ForbiddenError:
+      description: "Tidak memiliki izin akses (misal: mencoba mengubah keranjang milik orang lain)."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+    ValidationError:
+      description: Data yang diberikan tidak valid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorValidation"
+
+  # ------------------ SECURITY SCHEMES ------------------
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      description: "Masukkan token Bearer Anda. Contoh: 'Bearer 1|abcdef...'"

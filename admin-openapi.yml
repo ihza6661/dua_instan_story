@@ -1,0 +1,590 @@
+openapi: 3.0.3
+info:
+  title: Dua Insan Story API - Admin
+  description: Dokumentasi API lengkap untuk alur kerja sisi admin, termasuk manajemen produk, kategori, opsi, dan pesanan.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+    description: Server Pengembangan Lokal
+
+tags:
+  - name: Admin - Kategori Produk
+    description: Mengelola kategori produk.
+  - name: Admin - Produk
+    description: Mengelola produk.
+  - name: Admin - Gambar Produk
+    description: Mengelola gambar produk.
+  - name: Admin - Item Tambahan
+    description: Mengelola item tambahan (Add-ons).
+  - name: Admin - Atribut
+    description: Mengelola atribut opsi (e.g., Ukuran).
+  - name: Admin - Nilai Atribut
+    description: Mengelola nilai atribut (e.g., Kecil, Sedang).
+  - name: Admin - Opsi Produk
+    description: Menautkan opsi ke produk.
+  - name: Admin - Tautan Item Tambahan
+    description: Menautkan item tambahan ke produk.
+
+# ===============================================================
+# PATHS (DEFINISI ENDPOINT)
+# ===============================================================
+paths:
+  # ------------------ ADMIN: KATEGORI PRODUK ------------------
+  /admin/product-categories:
+    get:
+      tags: [Admin - Kategori Produk]
+      summary: (Admin) Lihat semua kategori produk
+      security: [{ sanctum: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductCategory"
+    post:
+      tags: [Admin - Kategori Produk]
+      summary: (Admin) Buat kategori produk baru
+      security: [{ sanctum: [] }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreProductCategoryBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCategoryResponse"
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /admin/product-categories/{productCategoryId}:
+    get:
+      tags: [Admin - Kategori Produk]
+      summary: (Admin) Lihat detail kategori
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductCategoryId" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ProductCategory"
+        "404": { $ref: "#/components/responses/NotFoundError" }
+    patch:
+      tags: [Admin - Kategori Produk]
+      summary: (Admin) Update kategori
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductCategoryId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateProductCategoryBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCategoryResponse"
+        "422": { $ref: "#/components/responses/ValidationError" }
+    delete:
+      tags: [Admin - Kategori Produk]
+      summary: (Admin) Hapus kategori
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductCategoryId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "409":
+          description: Conflict (jika masih memiliki produk).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GenericError" }
+
+  # ------------------ ADMIN: PRODUK ------------------
+  /admin/products:
+    get:
+      tags: [Admin - Produk]
+      summary: (Admin) Lihat semua produk
+      security: [{ sanctum: [] }]
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Admin - Produk]
+      summary: (Admin) Buat produk baru
+      security: [{ sanctum: [] }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreProductBody"
+      responses:
+        "201": { description: Created }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /admin/products/{productId}:
+    get:
+      tags: [Admin - Produk]
+      summary: (Admin) Lihat detail produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      responses:
+        "200": { description: OK }
+    patch:
+      tags: [Admin - Produk]
+      summary: (Admin) Update produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateProductBody"
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [Admin - Produk]
+      summary: (Admin) Hapus produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+  # ------------------ ADMIN: GAMBAR PRODUK ------------------
+  /admin/products/{productId}/images:
+    post:
+      tags: [Admin - Gambar Produk]
+      summary: (Admin) Unggah gambar produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreProductImageBody"
+      responses:
+        "201": { description: Created }
+  /admin/images/{imageId}:
+    delete:
+      tags: [Admin - Gambar Produk]
+      summary: (Admin) Hapus gambar produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ImageId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+  # ------------------ ADMIN: ITEM TAMBAHAN (ADD-ONS) ------------------
+  /admin/add-ons:
+    get:
+      tags: [Admin - Item Tambahan]
+      summary: (Admin) Lihat semua item tambahan
+      security: [{ sanctum: [] }]
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Admin - Item Tambahan]
+      summary: (Admin) Buat item tambahan
+      security: [{ sanctum: [] }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreAddOnBody"
+      responses:
+        "201": { description: Created }
+  /admin/add-ons/{addOnId}:
+    get:
+      tags: [Admin - Item Tambahan]
+      summary: (Admin) Lihat detail item tambahan
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AddOnId" }]
+      responses:
+        "200": { description: OK }
+    patch:
+      tags: [Admin - Item Tambahan]
+      summary: (Admin) Update item tambahan
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AddOnId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateAddOnBody"
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [Admin - Item Tambahan]
+      summary: (Admin) Hapus item tambahan
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AddOnId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+  # ------------------ ADMIN: ATRIBUT ------------------
+  /admin/attributes:
+    get:
+      tags: [Admin - Atribut]
+      summary: (Admin) Lihat semua atribut
+      security: [{ sanctum: [] }]
+      responses:
+        "200": { description: OK }
+    post:
+      tags: [Admin - Atribut]
+      summary: (Admin) Buat atribut
+      security: [{ sanctum: [] }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreAttributeBody"
+      responses:
+        "201": { description: Created }
+  /admin/attributes/{attributeId}:
+    get:
+      tags: [Admin - Atribut]
+      summary: (Admin) Lihat detail atribut
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      responses:
+        "200": { description: OK }
+    patch:
+      tags: [Admin - Atribut]
+      summary: (Admin) Update atribut
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateAttributeBody"
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [Admin - Atribut]
+      summary: (Admin) Hapus atribut
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+  # ------------------ ADMIN: NILAI ATRIBUT ------------------
+  /admin/attributes/{attributeId}/values:
+    post:
+      tags: [Admin - Nilai Atribut]
+      summary: (Admin) Buat nilai atribut baru untuk sebuah atribut
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreAttributeValueBody"
+      responses:
+        "201": { description: Created }
+  /admin/values/{valueId}:
+    patch:
+      tags: [Admin - Nilai Atribut]
+      summary: (Admin) Update nilai atribut
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ValueId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateAttributeValueBody"
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [Admin - Nilai Atribut]
+      summary: (Admin) Hapus nilai atribut
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ValueId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+  # ------------------ ADMIN: OPSI PRODUK ------------------
+  /admin/products/{productId}/options:
+    post:
+      tags: [Admin - Opsi Produk]
+      summary: (Admin) Tautkan opsi ke produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreProductOptionBody"
+      responses:
+        "201": { description: Created }
+  /admin/options/{optionId}:
+    patch:
+      tags: [Admin - Opsi Produk]
+      summary: (Admin) Update opsi produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/OptionId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateProductOptionBody"
+      responses:
+        "200": { description: OK }
+    delete:
+      tags: [Admin - Opsi Produk]
+      summary: (Admin) Hapus opsi dari produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/OptionId" }]
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+  # ------------------ ADMIN: TAUTAN ITEM TAMBAHAN ------------------
+  /admin/products/{productId}/add-ons:
+    post:
+      tags: [Admin - Tautan Item Tambahan]
+      summary: (Admin) Tautkan item tambahan ke produk
+      security: [{ sanctum: [] }]
+      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      requestBody:
+        $ref: "#/components/requestBodies/StoreProductAddOnBody"
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+  /admin/products/{productId}/add-ons/{addOnId}:
+    delete:
+      tags: [Admin - Tautan Item Tambahan]
+      summary: (Admin) Lepas tautan item tambahan dari produk
+      security: [{ sanctum: [] }]
+      parameters:
+        - { $ref: "#/components/parameters/ProductId" }
+        - { $ref: "#/components/parameters/AddOnId" }
+      responses:
+        "200": { $ref: "#/components/responses/SuccessMessage" }
+
+# ===============================================================
+# COMPONENTS (BAGIAN YANG DAPAT DIGUNAKAN KEMBALI)
+# ===============================================================
+components:
+  schemas:
+    ProductCategory:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Undangan Pernikahan" }
+        slug: { type: string, example: "undangan-pernikahan" }
+        description: { type: string, nullable: true }
+    ProductCategoryResponse:
+      type: object
+      properties:
+        message: { type: string }
+        data: { $ref: "#/components/schemas/ProductCategory" }
+    ErrorValidation:
+      type: object
+      properties:
+        message: { type: string, example: "The given data was invalid." }
+        errors:
+          {
+            type: object,
+            additionalProperties: { type: array, items: { type: string } },
+          }
+    GenericError:
+      type: object
+      properties:
+        message: { type: string }
+    SuccessMessage:
+      type: object
+      properties:
+        message: { type: string }
+
+  requestBodies:
+    StoreProductCategoryBody:
+      description: Data untuk kategori produk baru.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name: { type: string, example: "Buku Tamu" }
+              description: { type: string, nullable: true }
+    UpdateProductCategoryBody:
+      description: Data untuk memperbarui kategori produk.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name: { type: string, example: "Buku Tamu Custom" }
+              description: { type: string, nullable: true }
+    StoreProductBody:
+      description: Data untuk produk baru.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [category_id, name, base_price]
+            properties:
+              category_id: { type: integer, example: 1 }
+              name: { type: string, example: "Undangan Klasik Elegan" }
+              sku: { type: string, nullable: true, example: "SS-005" }
+              description: { type: string, nullable: true }
+              base_price: { type: integer, example: 5000 }
+              min_order_quantity: { type: integer, example: 100 }
+              is_active: { type: boolean, example: true }
+    UpdateProductBody:
+      description: Data untuk memperbarui produk.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              category_id: { type: integer }
+              name: { type: string }
+              sku: { type: string, nullable: true }
+              description: { type: string, nullable: true }
+              base_price: { type: integer }
+              min_order_quantity: { type: integer }
+              is_active: { type: boolean }
+    StoreProductImageBody:
+      description: Data untuk mengunggah gambar produk.
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [images]
+            properties:
+              images: { type: array, items: { type: string, format: binary } }
+              alt_texts:
+                { type: array, nullable: true, items: { type: string } }
+              is_featured_index: { type: integer, nullable: true }
+    StoreAddOnBody:
+      description: Data untuk item tambahan.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, price]
+            properties:
+              name: { type: string, example: "Amplop Fancy" }
+              price: { type: integer, example: 1200 }
+    UpdateAddOnBody:
+      description: Data untuk memperbarui item tambahan.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name: { type: string }
+              price: { type: integer }
+    StoreAttributeBody:
+      description: Data untuk atribut baru.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name: { type: string, example: "Jenis Kertas" }
+    UpdateAttributeBody:
+      description: Data untuk memperbarui atribut.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name: { type: string }
+    StoreAttributeValueBody:
+      description: Data untuk nilai atribut baru.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [value]
+            properties:
+              value: { type: string, example: "Jasmine 200gsm" }
+    UpdateAttributeValueBody:
+      description: Data untuk memperbarui nilai atribut.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              value: { type: string }
+    StoreProductOptionBody:
+      description: Data untuk menautkan nilai atribut ke produk.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [attribute_value_id, price_adjustment]
+            properties:
+              attribute_value_id: { type: integer }
+              price_adjustment:
+                {
+                  type: integer,
+                  example: 1000,
+                  description: "Bisa positif/negatif/nol",
+                }
+    UpdateProductOptionBody:
+      description: Data untuk memperbarui opsi produk.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              price_adjustment: { type: integer }
+    StoreProductAddOnBody:
+      description: Data untuk menautkan item tambahan ke produk.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [add_on_id]
+            properties:
+              add_on_id: { type: integer }
+
+  parameters:
+    ProductCategoryId:
+      name: productCategoryId
+      in: path
+      required: true
+      description: ID dari kategori produk
+      schema: { type: integer }
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      description: ID dari produk
+      schema: { type: integer }
+    ImageId:
+      name: imageId
+      in: path
+      required: true
+      description: ID dari gambar produk
+      schema: { type: integer }
+    AddOnId:
+      name: addOnId
+      in: path
+      required: true
+      description: ID dari item tambahan
+      schema: { type: integer }
+    AttributeId:
+      name: attributeId
+      in: path
+      required: true
+      description: ID dari atribut
+      schema: { type: integer }
+    ValueId:
+      name: valueId
+      in: path
+      required: true
+      description: ID dari nilai atribut
+      schema: { type: integer }
+    OptionId:
+      name: optionId
+      in: path
+      required: true
+      description: ID dari opsi produk (dari tabel product_options)
+      schema: { type: integer }
+
+  responses:
+    NotFoundError:
+      description: Sumber daya tidak ditemukan.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/GenericError" }
+    UnauthorizedError:
+      description: Autentikasi gagal.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/GenericError" }
+    ForbiddenError:
+      description: Tidak memiliki izin akses.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/GenericError" }
+    ValidationError:
+      description: Data yang diberikan tidak valid.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorValidation" }
+    SuccessMessage:
+      description: Operasi berhasil.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/SuccessMessage" }
+
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      description: "Masukkan token Bearer Anda. Contoh: 'Bearer 1|abcdef...'"
