@@ -15,21 +15,27 @@ class CartService
 {
     public function getOrCreateCart(Request $request): Cart
     {
-        if (Auth::check()) {
-            return Cart::firstOrCreate(['user_id' => Auth::id()]);
-        }
-
+        $user = $request->user();
         $sessionId = $request->header('X-Session-ID');
-        if ($sessionId) {
-            $cart = Cart::where('session_id', $sessionId)->first();
-            if ($cart) {
-                return $cart;
+        $guestCart = $sessionId ? Cart::where('session_id', $sessionId)->first() : null;
+
+        if ($user) {
+            $userCart = Cart::firstOrCreate(['user_id' => $user->id]);
+
+            if ($guestCart && $guestCart->user_id === null) {
+                foreach ($guestCart->items as $item) {
+                    $item->update(['cart_id' => $userCart->id]);
+                }
+                $guestCart->delete();
             }
+            return $userCart;
         }
 
-        return Cart::create([
-            'session_id' => Str::uuid()->toString(),
-        ]);
+        if ($guestCart) {
+            return $guestCart;
+        }
+
+        return Cart::create(['session_id' => Str::uuid()->toString()]);
     }
 
     public function addItem(Request $request): Cart

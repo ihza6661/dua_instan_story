@@ -12,11 +12,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
-    Route::get('/cart', [CartController::class, 'show']);
-    Route::delete('/cart', [CartController::class, 'clear']);
-    Route::post('/cart/items', [CartItemController::class, 'store']);
-    Route::patch('/cart/items/{cartItem}', [CartItemController::class, 'update']);
-    Route::delete('/cart/items/{cartItem}', [CartItemController::class, 'destroy']);
+    Route::middleware('auth.optional')->group(function () {
+        Route::get('/cart', [CartController::class, 'show']);
+        Route::delete('/cart', [CartController::class, 'clear']);
+        Route::post('/cart/items', [CartItemController::class, 'store']);
+        Route::patch('/cart/items/{cartItem}', [CartItemController::class, 'update']);
+        Route::delete('/cart/items/{cartItem}', [CartItemController::class, 'destroy']);
+    });
 
     Route::prefix('customer')->name('customer.v1.')->group(function () {
         Route::apiResource('products', Customer\ProductController::class)->only(['index', 'show']);
@@ -24,6 +26,8 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
+
+        Route::post('/checkout', [\App\Http\Controllers\Api\V1\CheckoutController::class, 'store']);
     });
 });
 

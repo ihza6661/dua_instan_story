@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_item_meta', function (Blueprint $table) {
+        Schema::create('order_item_metas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_item_id')->constrained()->onDelete('cascade');
             $table->string('meta_key', 100);
