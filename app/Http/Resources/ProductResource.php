@@ -21,6 +21,7 @@ class ProductResource extends JsonResource
             'featured_image' => new ProductImageResource($this->whenLoaded('featuredImage', $this->whenLoaded('firstImage'))),
             'images' => ProductImageResource::collection($this->whenLoaded('images')),
             'options' => ProductOptionResource::collection($this->whenLoaded('options')),
+            'add_ons' => AddOnResource::collection($this->whenLoaded('addOns')),
         ];
     }
 }

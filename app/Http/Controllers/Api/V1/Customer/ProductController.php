@@ -30,7 +30,7 @@ class ProductController extends Controller
     {
         $product = $this->productService->findPubliclyVisibleProduct((int)$id);
 
-        $product->load(['category', 'images', 'options.attributeValue.attribute']);
+        $product->load(['category', 'images', 'options.attributeValue.attribute', 'addOns']);
 
         return new ProductResource($product);
     }
