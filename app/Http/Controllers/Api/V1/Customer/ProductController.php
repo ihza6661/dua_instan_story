@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Services\ProductService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProductController extends Controller
@@ -17,12 +18,14 @@ class ProductController extends Controller
         $this->productService = $productService;
     }
 
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $products = Product::with(['category', 'featuredImage', 'firstImage'])
-            ->where('is_active', true)
-            ->latest()
-            ->paginate(10);
+        $searchTerm = $request->query('search');
+
+        $categorySlug = $request->query('category');
+
+        $products = $this->productService->getPaginatedActiveProducts($searchTerm, $categorySlug);
+
         return ProductResource::collection($products);
     }
 

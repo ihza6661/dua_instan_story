@@ -767,7 +767,6 @@ components:
             properties:
               category_id: { type: integer }
               name: { type: string }
-              sku: { type: string }
               description: { type: string }
               base_price: { type: integer }
               min_order_quantity: { type: integer }

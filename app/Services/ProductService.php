@@ -47,10 +47,21 @@ class ProductService
         $image->delete();
     }
 
-    public function getPaginatedActiveProducts(): LengthAwarePaginator
+    public function getPaginatedActiveProducts(?string $searchTerm = null, ?string $categorySlug = null): LengthAwarePaginator
     {
-        return Product::with('category')
+        return Product::with(['category', 'featuredImage', 'firstImage'])
             ->where('is_active', true)
+            ->when($searchTerm, function ($query, $searchTerm) {
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('name', 'like', "%{$searchTerm}%")
+                        ->orWhere('description', 'like', "%{$searchTerm}%");
+                });
+            })
+            ->when($categorySlug, function ($query, $categorySlug) {
+                $query->whereHas('category', function ($subQuery) use ($categorySlug) {
+                    $subQuery->where('slug', $categorySlug);
+                });
+            })
             ->latest()
             ->paginate(10);
     }
