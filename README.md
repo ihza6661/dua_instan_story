@@ -120,12 +120,4 @@ Buka di [Swagger Editor](https://editor.swagger.io/) atau VS Code “Swagger Vie
 
   * Email: `customer@example.com`
   * Password: `password`
-
----
-
-## 📝 Lisensi
-
-[MIT License](https://opensource.org/licenses/MIT)
-
-```
-```
+  
