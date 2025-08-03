@@ -29,4 +29,7 @@ Route::prefix('v1/admin')
         Route::apiResource('products.images', Admin\ProductImageController::class)
             ->only(['store', 'destroy'])
             ->shallow();
+        Route::apiResource('add-ons', Admin\AddOnController::class);
+        Route::apiResource('attributes', Admin\AttributeController::class);
+        Route::apiResource('attributes.values', Admin\AttributeValueController::class)->shallow();
     });
