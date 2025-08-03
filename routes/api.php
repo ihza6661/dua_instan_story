@@ -32,4 +32,5 @@ Route::prefix('v1/admin')
         Route::apiResource('add-ons', Admin\AddOnController::class);
         Route::apiResource('attributes', Admin\AttributeController::class);
         Route::apiResource('attributes.values', Admin\AttributeValueController::class)->shallow();
+        Route::apiResource('products.options', Admin\ProductOptionController::class)->shallow();
     });

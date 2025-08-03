@@ -12,7 +12,6 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'sku' => $this->sku,
             'description' => $this->description,
             'base_price' => $this->base_price,
             'min_order_quantity' => $this->min_order_quantity,
@@ -21,6 +20,7 @@ class ProductResource extends JsonResource
             'category' => new ProductCategoryResource($this->whenLoaded('category')),
             'featured_image' => new ProductImageResource($this->whenLoaded('featuredImage', $this->whenLoaded('firstImage'))),
             'images' => ProductImageResource::collection($this->whenLoaded('images')),
+            'options' => ProductOptionResource::collection($this->whenLoaded('options')),
         ];
     }
 }
