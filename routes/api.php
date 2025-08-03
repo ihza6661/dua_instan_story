@@ -4,11 +4,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Api\V1\Customer;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\CartItemController;
 
 // Rute Publik (Autentikasi & Produk untuk Customer)
 Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+
+    Route::get('/cart', [CartController::class, 'show']);
+    Route::delete('/cart', [CartController::class, 'clear']);
+    Route::post('/cart/items', [CartItemController::class, 'store']);
+    Route::patch('/cart/items/{cartItem}', [CartItemController::class, 'update']);
+    Route::delete('/cart/items/{cartItem}', [CartItemController::class, 'destroy']);
 
     Route::prefix('customer')->name('customer.v1.')->group(function () {
         Route::apiResource('products', Customer\ProductController::class)->only(['index', 'show']);
