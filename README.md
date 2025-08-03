@@ -7,7 +7,7 @@
 
 # Dua Insan Story – API Backend
 
-**Backend RESTful API** untuk platform e-commerce **Dua Insan Story**, yang melayani pemesanan undangan pernikahan dan produk terkait secara online. Dibangun dengan **Laravel 11**, berfokus pada arsitektur yang bersih, skalabel, dan mudah dirawat.
+**Backend RESTful API** untuk platform e-commerce **Dua Insan Story**, yang melayani pemesanan undangan pernikahan dan produk terkait secara online. Dibangun dengan **Laravel 12**, berfokus pada arsitektur yang bersih, skalabel, dan mudah dirawat.
 
 ---
 
