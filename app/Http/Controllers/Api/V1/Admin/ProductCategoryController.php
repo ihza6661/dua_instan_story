@@ -35,11 +35,11 @@ class ProductCategoryController extends Controller
 
     public function update(UpdateRequest $request, ProductCategory $productCategory, ProductCategoryService $categoryService): JsonResponse
     {
-        $category = $categoryService->updateCategory($productCategory, $request->validated());
+        $updatedCategory = $categoryService->updateCategory($productCategory, $request->validated());
 
         return response()->json([
             'message' => 'Kategori produk berhasil diperbarui.',
-            'data' => new ProductCategoryResource($category),
+            'data' => new ProductCategoryResource($updatedCategory),
         ]);
     }
 

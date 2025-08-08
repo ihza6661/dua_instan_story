@@ -35,7 +35,7 @@ class ProductService
         $path = $imageFile->store('product-images', 'public');
 
         return $product->images()->create([
-            'image_url' => $path,
+            'image' => $path,
             'alt_text' => $data['alt_text'] ?? null,
             'is_featured' => $data['is_featured'] ?? false,
         ]);
@@ -43,7 +43,7 @@ class ProductService
 
     public function deleteProductImage(ProductImage $image): void
     {
-        Storage::disk('public')->delete($image->image_url);
+        Storage::disk('public')->delete($image->image);
         $image->delete();
     }
 

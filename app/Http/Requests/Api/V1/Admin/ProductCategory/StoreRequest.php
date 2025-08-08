@@ -14,8 +14,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100', 'unique:product_categories,name'],
-            'description' => ['nullable', 'string'],
+            'name' => 'required|string|max:100|unique:product_categories,name',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }
 
@@ -23,7 +24,15 @@ class StoreRequest extends FormRequest
     {
         return [
             'name.required' => 'Nama kategori wajib diisi.',
-            'name.unique' => 'Nama kategori ini sudah ada.',
+            'name.string'   => 'Nama kategori harus berupa teks.',
+            'name.max'      => 'Nama kategori tidak boleh lebih dari :max karakter.',
+            'name.unique'   => 'Nama kategori ini sudah terdaftar.',
+
+            'description.string' => 'Deskripsi harus berupa teks.',
+
+            'image.image'   => 'File yang diunggah harus berupa gambar.',
+            'image.mimes'   => 'Gambar harus berupa file dengan tipe: :values.',
+            'image.max'     => 'Ukuran gambar tidak boleh lebih dari 2MB.',
         ];
     }
 }

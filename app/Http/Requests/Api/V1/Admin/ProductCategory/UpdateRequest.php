@@ -17,8 +17,15 @@ class UpdateRequest extends FormRequest
         $categoryId = $this->route('product_category')->id;
 
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:100', Rule::unique('product_categories')->ignore($categoryId)],
-            'description' => ['sometimes', 'nullable', 'string'],
+            'name' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('product_categories', 'name')->ignore($categoryId),
+            ],
+            'description' => 'nullable|string',
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }
 
@@ -26,10 +33,15 @@ class UpdateRequest extends FormRequest
     {
         return [
             'name.required' => 'Nama kategori wajib diisi.',
-            'name.string' => 'Nama kategori harus berupa teks.',
-            'name.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
-            'name.unique' => 'Nama kategori ini sudah ada.',
+            'name.string'   => 'Nama kategori harus berupa teks.',
+            'name.max'      => 'Nama kategori tidak boleh lebih dari :max karakter.',
+            'name.unique'   => 'Nama kategori ini sudah terdaftar.',
+
             'description.string' => 'Deskripsi harus berupa teks.',
+
+            'image.image'   => 'File yang diunggah harus berupa gambar.',
+            'image.mimes'   => 'Gambar harus berupa file dengan tipe: :values.',
+            'image.max'     => 'Ukuran gambar tidak boleh lebih dari 2MB.',
         ];
     }
 }

@@ -11,7 +11,7 @@ class GalleryItem extends Model
 
     protected $fillable = [
         'product_id',
-        'image_url',
+        'image',
         'title',
         'description',
         'category',

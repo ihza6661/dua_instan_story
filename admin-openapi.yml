@@ -33,41 +33,57 @@ paths:
   /admin/product-categories:
     get:
       tags: [Admin - Kategori Produk]
-      summary: (Admin) Lihat semua kategori produk
-      security: [{ sanctum: [] }]
+      summary: (Admin) Daftar semua kategori produk
+      description: Mengambil daftar lengkap semua kategori produk yang ada di sistem.
+      security:
+        - sanctum: []
       responses:
         "200":
-          description: OK
+          description: Daftar kategori berhasil diambil.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ProductCategory"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProductCategory"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
     post:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Buat kategori produk baru
-      security: [{ sanctum: [] }]
+      description: Membuat kategori produk baru dengan nama, deskripsi, dan sebuah gambar opsional.
+      security:
+        - sanctum: []
       requestBody:
         $ref: "#/components/requestBodies/StoreProductCategoryBody"
       responses:
         "201":
-          description: Created
+          description: Kategori berhasil dibuat.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductCategoryResponse"
-        "422": { $ref: "#/components/responses/ValidationError" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   /admin/product-categories/{productCategoryId}:
     get:
       tags: [Admin - Kategori Produk]
-      summary: (Admin) Lihat detail kategori
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductCategoryId" }]
+      summary: (Admin) Lihat detail kategori produk
+      description: Mengambil detail informasi dari satu kategori produk berdasarkan ID-nya.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductCategoryId"
       responses:
         "200":
-          description: OK
+          description: Detail kategori berhasil diambil.
           content:
             application/json:
               schema:
@@ -75,34 +91,58 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/ProductCategory"
-        "404": { $ref: "#/components/responses/NotFoundError" }
-    patch:
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+    post:
       tags: [Admin - Kategori Produk]
-      summary: (Admin) Update kategori
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductCategoryId" }]
+      summary: (Admin) Perbarui kategori produk
+      description: |
+        Memperbarui data kategori produk yang sudah ada. 
+        **Penting:** Karena pembaruan ini mendukung unggah file, metode yang digunakan adalah `POST` dengan menyertakan field `_method` bernilai `PUT` atau `PATCH` di dalam `form-data`.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductCategoryId"
       requestBody:
         $ref: "#/components/requestBodies/UpdateProductCategoryBody"
       responses:
         "200":
-          description: OK
+          description: Kategori berhasil diperbarui.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductCategoryResponse"
-        "422": { $ref: "#/components/responses/ValidationError" }
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
     delete:
       tags: [Admin - Kategori Produk]
-      summary: (Admin) Hapus kategori
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductCategoryId" }]
+      summary: (Admin) Hapus kategori produk
+      description: Menghapus sebuah kategori produk. Operasi akan gagal jika kategori tersebut masih memiliki produk terkait.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductCategoryId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
         "409":
-          description: Conflict (jika masih memiliki produk).
+          description: Gagal menghapus karena kategori masih memiliki produk terkait.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/GenericError" }
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: PRODUK ------------------
   /admin/products:
@@ -336,55 +376,131 @@ components:
   schemas:
     ProductCategory:
       type: object
+      description: Representasi dari sebuah kategori produk.
       properties:
-        id: { type: integer, example: 1 }
-        name: { type: string, example: "Undangan Pernikahan" }
-        slug: { type: string, example: "undangan-pernikahan" }
-        description: { type: string, nullable: true }
+        id:
+          type: integer
+          description: ID unik untuk kategori.
+          example: 1
+        name:
+          type: string
+          description: Nama kategori.
+          example: "Undangan Pernikahan"
+        slug:
+          type: string
+          description: Versi URL-friendly dari nama kategori.
+          example: "undangan-pernikahan"
+          readOnly: true
+        description:
+          type: string
+          nullable: true
+          description: Deskripsi singkat tentang kategori.
+          example: "Berbagai macam desain undangan untuk hari spesial Anda."
+        image_url:
+          type: string
+          format: url
+          nullable: true
+          description: URL lengkap ke gambar kategori.
+          example: "http://127.0.0.1:8000/storage/product-categories/image.jpg"
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          description: Waktu kapan kategori dibuat.
+          example: "2025-08-08T17:00:00.000000Z"
+          readOnly: true
+
     ProductCategoryResponse:
       type: object
       properties:
-        message: { type: string }
-        data: { $ref: "#/components/schemas/ProductCategory" }
-    ErrorValidation:
-      type: object
-      properties:
-        message: { type: string, example: "The given data was invalid." }
-        errors:
-          {
-            type: object,
-            additionalProperties: { type: array, items: { type: string } },
-          }
+        message:
+          type: string
+          example: "Kategori produk berhasil dibuat."
+        data:
+          $ref: "#/components/schemas/ProductCategory"
+
     GenericError:
       type: object
       properties:
-        message: { type: string }
+        message:
+          type: string
+          example: "Sumber daya tidak ditemukan."
+
+    ErrorValidation:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The given data was invalid."
+        errors:
+          type: object
+          description: Kumpulan pesan error validasi.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              example: "Nama kategori wajib diisi."
+
     SuccessMessage:
       type: object
       properties:
-        message: { type: string }
+        message:
+          type: string
+          example: "Operasi berhasil."
 
   requestBodies:
     StoreProductCategoryBody:
-      description: Data untuk kategori produk baru.
+      description: Data untuk membuat kategori produk baru.
       required: true
       content:
-        application/json:
+        multipart/form-data:
           schema:
             type: object
             required: [name]
             properties:
-              name: { type: string, example: "Buku Tamu" }
-              description: { type: string, nullable: true }
+              name:
+                type: string
+                description: Nama untuk kategori baru.
+                example: "Buku Tamu"
+              description:
+                type: string
+                nullable: true
+                description: Deskripsi opsional untuk kategori.
+              image:
+                type: string
+                format: binary
+                description: File gambar untuk kategori (opsional).
+          encoding:
+            image:
+              contentType: image/png, image/jpeg, image/gif, image/webp
+
     UpdateProductCategoryBody:
-      description: Data untuk memperbarui kategori produk.
+      description: Data untuk memperbarui kategori produk. Gunakan `_method`=`PUT` untuk method spoofing.
+      required: true
       content:
-        application/json:
+        multipart/form-data:
           schema:
             type: object
             properties:
-              name: { type: string, example: "Buku Tamu Custom" }
-              description: { type: string, nullable: true }
+              _method:
+                type: string
+                description: "Wajib diisi dengan 'PUT' atau 'PATCH' untuk method spoofing."
+                example: "PUT"
+              name:
+                type: string
+                description: Nama baru untuk kategori.
+                example: "Buku Tamu Pernikahan"
+              description:
+                type: string
+                nullable: true
+                description: Deskripsi baru untuk kategori.
+              image:
+                type: string
+                format: binary
+                description: "File gambar baru (opsional). Mengunggah gambar baru akan menggantikan yang lama."
+          encoding:
+            image:
+              contentType: image/png, image/jpeg, image/gif, image/webp
     StoreProductBody:
       description: Data untuk produk baru.
       content:
@@ -517,8 +633,10 @@ components:
       name: productCategoryId
       in: path
       required: true
-      description: ID dari kategori produk
-      schema: { type: integer }
+      description: ID numerik dari kategori produk.
+      schema:
+        type: integer
+        example: 1
     ProductId:
       name: productId
       in: path

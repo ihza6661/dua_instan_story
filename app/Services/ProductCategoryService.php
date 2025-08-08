@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\ProductCategory;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductCategoryService
@@ -10,6 +12,10 @@ class ProductCategoryService
     public function createCategory(array $data): ProductCategory
     {
         $data['slug'] = Str::slug($data['name']);
+
+        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+            $data['image'] = $data['image']->store('product-categories', 'public');
+        }
 
         return ProductCategory::create($data);
     }
@@ -20,7 +26,14 @@ class ProductCategoryService
             $data['slug'] = Str::slug($data['name']);
         }
 
+        if (isset($data['image']) && $data['image'] instanceof UploadedFile) {
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = $data['image']->store('product-categories', 'public');
+        }
+
         $category->update($data);
-        return $category;
+        return $category->fresh();
     }
 }
