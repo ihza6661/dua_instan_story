@@ -34,6 +34,10 @@ class ProductService
     {
         $path = $imageFile->store('product-images', 'public');
 
+        if (!empty($data['is_featured'])) {
+            $product->images()->where('is_featured', true)->update(['is_featured' => false]);
+        }
+
         return $product->images()->create([
             'image' => $path,
             'alt_text' => $data['alt_text'] ?? null,

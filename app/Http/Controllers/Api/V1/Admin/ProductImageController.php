@@ -18,6 +18,13 @@ class ProductImageController extends Controller
         $uploadedImages = [];
 
         $existingImageCount = $product->images()->count();
+        $existingHasFeatured = $product->images()->where('is_featured', true)->exists();
+
+        if (isset($validated['is_featured_index'])) {
+            $featuredIndex = (int) $validated['is_featured_index'];
+        } else {
+            $featuredIndex = $existingHasFeatured ? null : 0;
+        }
 
         foreach ($validated['images'] as $index => $imageFile) {
             $providedAltText = $validated['alt_texts'][$index] ?? null;
@@ -31,9 +38,11 @@ class ProductImageController extends Controller
                 $altText = $providedAltText;
             }
 
+            $isFeaturedForThisImage = ($featuredIndex !== null && $featuredIndex == $index);
+
             $imageData = [
                 'alt_text' => $altText,
-                'is_featured' => isset($validated['is_featured_index']) && $validated['is_featured_index'] == $index,
+                'is_featured' => $isFeaturedForThisImage,
             ];
 
             $uploadedImages[] = $productService->addImageToProduct(
