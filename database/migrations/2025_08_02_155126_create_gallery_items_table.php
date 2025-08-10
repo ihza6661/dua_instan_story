@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('gallery_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('image');
             $table->string('title')->nullable();
             $table->text('description')->nullable();
             $table->string('category', 100)->nullable();
+            $table->string('file_path');
+            $table->enum('media_type', ['image', 'video'])->default('image');
             $table->timestamps();
         });
     }

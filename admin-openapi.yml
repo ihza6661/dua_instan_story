@@ -10,6 +10,8 @@ servers:
 tags:
   - name: Admin - Pengguna
     description: Mengelola akun administrator.
+  - name: Admin - Galeri
+    description: Mengelola item galeri (gambar & video).
   - name: Admin - Kategori Produk
     description: Mengelola kategori produk.
   - name: Admin - Produk
@@ -135,6 +137,106 @@ paths:
           $ref: "#/components/responses/SuccessMessage"
         "403":
           $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  
+  # ------------------ ADMIN: GALERI ------------------
+  /admin/gallery-items:
+    get:
+      tags: [Admin - Galeri]
+      summary: (Admin) Daftar semua item galeri
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Daftar item galeri berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GalleryItem"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    post:
+      tags: [Admin - Galeri]
+      summary: (Admin) Unggah item galeri baru
+      description: Mengunggah file gambar atau video baru ke galeri.
+      security:
+        - sanctum: []
+      requestBody:
+        $ref: "#/components/requestBodies/StoreGalleryItemBody"
+      responses:
+        "201":
+          description: Item galeri berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GalleryItemResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /admin/gallery-items/{galleryItemId}:
+    get:
+      tags: [Admin - Galeri]
+      summary: (Admin) Lihat detail item galeri
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/GalleryItemId"
+      responses:
+        "200":
+          description: Detail item galeri berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GalleryItem"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    post: # Menggunakan POST untuk method spoofing PUT/PATCH dengan multipart/form-data
+      tags: [Admin - Galeri]
+      summary: (Admin) Perbarui item galeri
+      description: Memperbarui data item galeri. Gunakan `_method`=`PUT` karena mendukung unggah file.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/GalleryItemId"
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateGalleryItemBody"
+      responses:
+        "200":
+          description: Item galeri berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GalleryItemResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    delete:
+      tags: [Admin - Galeri]
+      summary: (Admin) Hapus item galeri
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/GalleryItemId"
+      responses:
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
         "404":
           $ref: "#/components/responses/NotFoundError"
         "401":
@@ -768,6 +870,23 @@ components:
       properties:
         message: { type: string, example: "Akun admin berhasil dibuat." }
         data: { $ref: "#/components/schemas/User" }
+        
+    GalleryItem:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, nullable: true, example: "Portofolio Undangan" }
+        description: { type: string, nullable: true }
+        category: { type: string, nullable: true, example: "Undangan" }
+        media_type: { type: string, enum: [image, video], example: "image" }
+        file_url: { type: string, format: url, readOnly: true }
+        product: { $ref: "#/components/schemas/Product" }
+        created_at: { type: string, format: date-time, readOnly: true }
+    GalleryItemResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Item galeri berhasil dibuat." }
+        data: { $ref: "#/components/schemas/GalleryItem" }
 
     ProductCategory:
       type: object
@@ -800,7 +919,7 @@ components:
       properties:
         message: { type: string, example: "Produk berhasil dibuat." }
         data: { $ref: "#/components/schemas/Product" }
-
+    
     ProductImage:
       type: object
       properties:
@@ -863,11 +982,15 @@ components:
     GenericError:
       type: object
       properties:
-        message: { type: string, example: "Sumber daya tidak ditemukan." }
+        message:
+          type: string
+          example: "Sumber daya tidak ditemukan."
     ErrorValidation:
       type: object
       properties:
-        message: { type: string, example: "The given data was invalid." }
+        message:
+          type: string
+          example: "The given data was invalid."
         errors:
           type: object
           additionalProperties:
@@ -878,7 +1001,9 @@ components:
     SuccessMessage:
       type: object
       properties:
-        message: { type: string, example: "Operasi berhasil." }
+        message:
+          type: string
+          example: "Operasi berhasil."
 
   requestBodies:
     StoreUserBody:
@@ -908,6 +1033,36 @@ components:
               password: { type: string, format: password, nullable: true, description: "Isi hanya jika ingin mengubah password." }
               password_confirmation: { type: string, format: password }
               phone_number: { type: string, nullable: true }
+
+    StoreGalleryItemBody:
+      description: Data untuk item galeri baru.
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file]
+            properties:
+              product_id: { type: integer, nullable: true }
+              title: { type: string, nullable: true }
+              description: { type: string, nullable: true }
+              category: { type: string, nullable: true }
+              file: { type: string, format: binary, description: "File gambar atau video." }
+    UpdateGalleryItemBody:
+      description: Data untuk memperbarui item galeri.
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [_method]
+            properties:
+              _method: { type: string, example: "PUT" }
+              product_id: { type: integer, nullable: true }
+              title: { type: string, nullable: true }
+              description: { type: string, nullable: true }
+              category: { type: string, nullable: true }
+              file: { type: string, format: binary, nullable: true }
 
     StoreProductCategoryBody:
       description: Data untuk membuat kategori produk baru.
@@ -1080,6 +1235,13 @@ components:
       description: ID numerik dari pengguna.
       schema:
         type: integer
+    GalleryItemId:
+      name: galleryItemId
+      in: path
+      required: true
+      description: ID dari item galeri.
+      schema:
+        type: integer
     ProductCategoryId:
       name: productCategoryId
       in: path
@@ -1156,3 +1318,4 @@ components:
       type: http
       scheme: bearer
       description: "Masukkan token Bearer Anda. Contoh: 'Bearer 1|abcdef...'"
+

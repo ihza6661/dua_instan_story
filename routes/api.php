@@ -49,4 +49,5 @@ Route::prefix('v1/admin')
         Route::apiResource('products.options', Admin\ProductOptionController::class)->shallow();
         Route::post('products/{product}/add-ons', [Admin\ProductAddOnController::class, 'store'])->name('products.addons.store');
         Route::delete('products/{product}/add-ons/{add_on}', [Admin\ProductAddOnController::class, 'destroy'])->name('products.addons.destroy');
+        Route::apiResource('gallery-items', Admin\GalleryItemController::class);
     });
