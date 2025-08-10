@@ -45,7 +45,14 @@ class ProductController extends Controller
 
     public function destroy(Product $product, ProductService $productService): JsonResponse
     {
-        $productService->deleteProduct($product);
+        try {
+            $productService->deleteProduct($product);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 409);
+        }
+
         return response()->json([
             'message' => 'Produk berhasil dihapus.',
         ]);

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
@@ -32,6 +33,10 @@ class UserService
 
     public function deleteUser(User $user): void
     {
+        if ($user->orders()->exists()) {
+            throw new Exception('Pengguna tidak dapat dihapus karena memiliki riwayat pesanan.');
+        }
+
         $user->delete();
     }
 }

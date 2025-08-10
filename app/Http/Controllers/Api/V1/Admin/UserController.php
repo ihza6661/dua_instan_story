@@ -56,7 +56,11 @@ class UserController extends Controller
             return response()->json(['message' => 'Anda tidak dapat menghapus akun Anda sendiri.'], 403);
         }
 
-        $this->userService->deleteUser($user);
+        try {
+            $this->userService->deleteUser($user);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 409);
+        }
 
         return response()->json(['message' => 'Akun admin berhasil dihapus.']);
     }

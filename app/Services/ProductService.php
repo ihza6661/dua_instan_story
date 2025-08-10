@@ -7,6 +7,7 @@ use App\Models\ProductImage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class ProductService
 {
@@ -23,6 +24,14 @@ class ProductService
 
     public function deleteProduct(Product $product): void
     {
+        if ($product->orderItems()->exists() || $product->cartItems()->exists()) {
+            throw new Exception('Produk tidak dapat dihapus karena sudah ada dalam pesanan atau keranjang belanja pelanggan.');
+        }
+
+        foreach ($product->images as $image) {
+            $this->deleteProductImage($image);
+        }
+
         $product->delete();
     }
 
