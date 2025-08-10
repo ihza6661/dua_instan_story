@@ -10,6 +10,8 @@ servers:
 tags:
   - name: Autentikasi
     description: Endpoint untuk registrasi, login, dan logout.
+  - name: Galeri
+    description: Endpoint publik untuk melihat galeri portofolio.
   - name: Kategori Produk
     description: Endpoint publik untuk melihat kategori produk.
   - name: Produk
@@ -70,6 +72,47 @@ paths:
                 $ref: "#/components/schemas/SuccessMessage"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
+
+  # ------------------ GALERI (CUSTOMER) ------------------
+  /customer/gallery-items:
+    get:
+      tags:
+        - Galeri
+      summary: Melihat daftar item galeri dengan filter
+      parameters:
+        - name: category
+          in: query
+          description: Filter item galeri berdasarkan kategori.
+          required: false
+          schema:
+            type: string
+            example: "undangan"
+      responses:
+        "200":
+          description: Daftar item galeri berhasil diambil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedGalleryItems"
+  /customer/gallery-items/{galleryItemId}:
+    get:
+      tags:
+        - Galeri
+      summary: Melihat detail satu item galeri
+      parameters:
+        - $ref: "#/components/parameters/GalleryItemId"
+      responses:
+        "200":
+          description: Detail item galeri berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/GalleryItem"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
 
   # ------------------ KATEGORI PRODUK (CUSTOMER) ------------------
   /customer/product-categories:
@@ -321,6 +364,27 @@ components:
             user: { $ref: "#/components/schemas/User" }
             token: { type: string, example: "2|aBcDeFgHiJkLmNoPqRsTuVwXyZ" }
 
+    GalleryItem:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, nullable: true, example: "Portofolio Undangan" }
+        description: { type: string, nullable: true }
+        category: { type: string, nullable: true, example: "Undangan" }
+        media_type: { type: string, enum: [image, video], example: "image" }
+        file_url: { type: string, format: url, readOnly: true }
+        product: { $ref: "#/components/schemas/Product" }
+        created_at: { type: string, format: date-time, readOnly: true }
+    PaginatedGalleryItems:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GalleryItem"
+        links: { type: object, properties: { first: {type: string}, last: {type: string}, prev: {type: string, nullable: true}, next: {type: string, nullable: true} } }
+        meta: { type: object, properties: { current_page: {type: integer}, from: {type: integer}, last_page: {type: integer}, path: {type: string}, per_page: {type: integer}, to: {type: integer}, total: {type: integer} } }
+
     ProductCategory:
       type: object
       properties:
@@ -548,6 +612,12 @@ components:
       description: Session ID unik untuk pengguna tamu. Wajib disertakan jika pengguna belum login dan berinteraksi dengan keranjang.
       required: false
       schema: { type: string, format: uuid }
+    GalleryItemId:
+      name: galleryItemId
+      in: path
+      description: ID dari item galeri.
+      required: true
+      schema: { type: integer }
     ProductId:
       name: productId
       in: path
