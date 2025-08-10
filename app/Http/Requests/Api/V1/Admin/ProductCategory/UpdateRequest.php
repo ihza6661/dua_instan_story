@@ -25,7 +25,7 @@ class UpdateRequest extends FormRequest
                 Rule::unique('product_categories', 'name')->ignore($categoryId),
             ],
             'description' => 'nullable|string',
-            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
     }
 
@@ -41,7 +41,7 @@ class UpdateRequest extends FormRequest
 
             'image.image'   => 'File yang diunggah harus berupa gambar.',
             'image.mimes'   => 'Gambar harus berupa file dengan tipe: :values.',
-            'image.max'     => 'Ukuran gambar tidak boleh lebih dari 2MB.',
+            'image.max'     => 'Ukuran gambar tidak boleh lebih dari 5MB.',
         ];
     }
 }

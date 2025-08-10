@@ -15,7 +15,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'images' => ['required', 'array'],
-            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'images.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'alt_texts' => ['nullable', 'array'],
             'alt_texts.*' => ['nullable', 'string', 'max:255'],
             'is_featured_index' => ['nullable', 'integer'],
@@ -27,7 +27,7 @@ class StoreRequest extends FormRequest
         return [
             'images.required' => 'Minimal satu file gambar wajib diunggah.',
             'images.*.image' => 'Setiap file yang diunggah harus berupa gambar.',
-            'images.*.max' => 'Ukuran setiap gambar tidak boleh lebih dari 2MB.',
+            'images.*.max' => 'Ukuran setiap gambar tidak boleh lebih dari 5MB.',
             'alt_texts.array' => 'Alt text harus dalam format array.',
             'is_featured_index.integer' => 'Index gambar utama harus berupa angka.',
         ];

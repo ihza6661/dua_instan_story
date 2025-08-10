@@ -16,7 +16,7 @@ class StoreRequest extends FormRequest
         return [
             'name' => 'required|string|max:100|unique:product_categories,name',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
     }
 
@@ -32,7 +32,7 @@ class StoreRequest extends FormRequest
 
             'image.image'   => 'File yang diunggah harus berupa gambar.',
             'image.mimes'   => 'Gambar harus berupa file dengan tipe: :values.',
-            'image.max'     => 'Ukuran gambar tidak boleh lebih dari 2MB.',
+            'image.max'     => 'Ukuran gambar tidak boleh lebih dari 5MB.',
         ];
     }
 }
