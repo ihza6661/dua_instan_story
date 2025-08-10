@@ -23,6 +23,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('customer')->name('customer.v1.')->group(function () {
         Route::apiResource('products', Customer\ProductController::class)->only(['index', 'show']);
         Route::apiResource('product-categories', Customer\ProductCategoryController::class)->only(['index', 'show']);
+        Route::apiResource('gallery-items', Customer\GalleryItemController::class)->only(['index', 'show']);
     });
 
     Route::middleware('auth:sanctum')->group(function () {
