@@ -119,7 +119,7 @@ paths:
       parameters:
         - name: search
           in: query
-          description: Kata kunci untuk mencari produk berdasarkan nama, SKU, atau deskripsi.
+          description: Kata kunci untuk mencari produk berdasarkan nama atau deskripsi.
           required: false
           schema:
             type: string
@@ -207,6 +207,9 @@ paths:
       responses:
         "201":
           description: Item berhasil ditambahkan. Mengembalikan kondisi keranjang terbaru.
+          headers:
+            X-Session-ID:
+              $ref: "#/components/headers/SessionIdHeader"
           content:
             application/json:
               schema:
@@ -235,6 +238,8 @@ paths:
                 $ref: "#/components/schemas/CartResponse"
         "403":
           $ref: "#/components/responses/ForbiddenError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
     delete:
       tags:
         - Keranjang Belanja
@@ -296,11 +301,11 @@ components:
     User:
       type: object
       properties:
-        id: { type: integer, example: 1 }
+        id: { type: integer, example: 5 }
         full_name: { type: string, example: "Budi Pelanggan" }
         email: { type: string, format: email, example: "budi@example.com" }
         phone_number: { type: string, nullable: true, example: "08123456789" }
-        role: { type: string, enum: [admin, customer] }
+        role: { type: string, enum: [admin, customer], example: "customer" }
     UserResponse:
       type: object
       properties:
@@ -314,7 +319,7 @@ components:
           type: object
           properties:
             user: { $ref: "#/components/schemas/User" }
-            token: { type: string, example: "1|abcdefghijklmnopqrstuvwxyz" }
+            token: { type: string, example: "2|aBcDeFgHiJkLmNoPqRsTuVwXyZ" }
 
     ProductCategory:
       type: object
@@ -322,12 +327,8 @@ components:
         id: { type: integer, example: 1 }
         name: { type: string, example: "Undangan Pernikahan" }
         slug: { type: string, example: "undangan-pernikahan" }
-        description:
-          {
-            type: string,
-            nullable: true,
-            example: "Berisi semua jenis undangan pernikahan.",
-          }
+        description: { type: string, nullable: true, example: "Berisi semua jenis undangan pernikahan." }
+        image: { type: string, format: url, nullable: true, description: "Path relatif ke gambar." }
 
     Product:
       type: object
@@ -365,30 +366,21 @@ components:
       type: object
       properties:
         id: { type: integer, example: 1 }
-        url:
-          {
-            type: string,
-            format: uri,
-            example: "http://localhost/storage/img.jpg",
-          }
-        alt_text:
-          {
-            type: string,
-            nullable: true,
-            example: "Tampak depan undangan elegan",
-          }
+        image: { type: string, format: uri, example: "product-images/image.jpg" }
+        alt_text: { type: string, nullable: true, example: "Tampak depan undangan elegan" }
         is_featured: { type: boolean, example: true }
 
     ProductOption:
       type: object
       properties:
         id: { type: integer, example: 1 }
-        price_adjustment: { type: integer, example: -5000 }
+        name: { type: string, example: "Ukuran", description: "Nama atribut induk." }
+        price_adjustment: { type: integer, example: -500 }
         value: { $ref: "#/components/schemas/AttributeValue" }
     AttributeValue:
       type: object
       properties:
-        id: { type: integer, example: 1 }
+        id: { type: integer, example: 2 }
         value: { type: string, example: "Kecil" }
     AddOn:
       type: object
@@ -402,8 +394,8 @@ components:
       properties:
         id: { type: integer, example: 1 }
         session_id: { type: string, format: uuid, nullable: true }
-        total_items: { type: integer, example: 150 }
-        subtotal: { type: integer, example: 40500000 }
+        total_items: { type: integer, example: 150, description: "Jumlah total semua item." }
+        subtotal: { type: integer, example: 40500000, description: "Total harga sebelum ongkir/pajak." }
         items:
           type: array
           items:
@@ -419,7 +411,7 @@ components:
         quantity: { type: integer, example: 150 }
         unit_price: { type: integer, example: 270000 }
         sub_total: { type: integer, example: 40500000 }
-        customizations: { type: object }
+        customization_details: { type: object, description: "Detail kustomisasi yang dipilih." }
         product: { $ref: "#/components/schemas/Product" }
 
     Order:
@@ -443,12 +435,7 @@ components:
         unit_price: { type: integer }
         sub_total: { type: integer }
         product: { $ref: "#/components/schemas/Product" }
-        custom_data:
-          {
-            type: object,
-            nullable: true,
-            description: "Berisi data form checkout untuk item ini",
-          }
+        custom_data: { type: object, nullable: true, description: "Berisi data form checkout untuk item ini" }
 
     PaginatedProducts:
       type: object
@@ -457,8 +444,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Product"
-        links: { type: object }
-        meta: { type: object }
+        links: { type: object, properties: { first: {type: string}, last: {type: string}, prev: {type: string, nullable: true}, next: {type: string, nullable: true} } }
+        meta: { type: object, properties: { current_page: {type: integer}, from: {type: integer}, last_page: {type: integer}, path: {type: string}, per_page: {type: integer}, to: {type: integer}, total: {type: integer} } }
     SuccessMessage:
       type: object
       properties:
@@ -490,12 +477,9 @@ components:
             required: [full_name, email, password, password_confirmation]
             properties:
               full_name: { type: string, example: "Pengguna Baru" }
-              email:
-                { type: string, format: email, example: "baru@example.com" }
-              password:
-                { type: string, format: password, example: "password123" }
-              password_confirmation:
-                { type: string, format: password, example: "password123" }
+              email: { type: string, format: email, example: "baru@example.com" }
+              password: { type: string, format: password, example: "password123" }
+              password_confirmation: { type: string, format: password, example: "password123" }
               phone_number: { type: string, example: "081234567890" }
     LoginBody:
       description: Kredensial untuk login.
@@ -506,8 +490,7 @@ components:
             type: object
             required: [email, password]
             properties:
-              email:
-                { type: string, format: email, example: "customer@example.com" }
+              email: { type: string, format: email, example: "customer@example.com" }
               password: { type: string, format: password, example: "password" }
     StoreCartItemBody:
       description: Data item yang akan ditambahkan ke keranjang.
@@ -520,20 +503,8 @@ components:
             properties:
               product_id: { type: integer, example: 1 }
               quantity: { type: integer, example: 100 }
-              options:
-                {
-                  type: array,
-                  items: { type: integer },
-                  example: [1, 3],
-                  description: "Array of product_option_id",
-                }
-              add_ons:
-                {
-                  type: array,
-                  items: { type: integer },
-                  example: [1],
-                  description: "Array of add_on_id",
-                }
+              options: { type: array, items: { type: integer }, example: [1, 3], description: "Array of product_option_id" }
+              add_ons: { type: array, items: { type: integer }, example: [1], description: "Array of add_on_id" }
     UpdateCartItemBody:
       description: Jumlah kuantitas baru.
       required: true
@@ -551,41 +522,21 @@ components:
         multipart/form-data:
           schema:
             type: object
-            required:
-              [
-                shipping_address,
-                bride_full_name,
-                groom_full_name,
-                bride_nickname,
-                groom_nickname,
-                bride_parents,
-                groom_parents,
-                akad_date,
-                akad_time,
-                akad_location,
-                reception_date,
-                reception_time,
-                reception_location,
-              ]
+            required: [shipping_address, bride_full_name, groom_full_name, bride_nickname, groom_nickname, bride_parents, groom_parents, akad_date, akad_time, akad_location, reception_date, reception_time, reception_location]
             properties:
-              shipping_address:
-                { type: string, example: "Jl. Khatulistiwa No. 1, Pontianak" }
+              shipping_address: { type: string, example: "Jl. Khatulistiwa No. 1, Pontianak" }
               bride_full_name: { type: string, example: "Adinda Putri" }
               groom_full_name: { type: string, example: "Budi Setiawan" }
               bride_nickname: { type: string, example: "Dinda" }
               groom_nickname: { type: string, example: "Budi" }
-              bride_parents:
-                { type: string, example: "Bpk. Hermawan & Ibu Sri Lestari" }
-              groom_parents:
-                { type: string, example: "Bpk. Agus Salim & Ibu Wati" }
+              bride_parents: { type: string, example: "Bpk. Hermawan & Ibu Sri Lestari" }
+              groom_parents: { type: string, example: "Bpk. Agus Salim & Ibu Wati" }
               akad_date: { type: string, format: "date", example: "2025-12-20" }
               akad_time: { type: string, example: "09:00 WIB" }
               akad_location: { type: string, example: "Masjid Raya Mujahidin" }
-              reception_date:
-                { type: string, format: "date", example: "2025-12-21" }
+              reception_date: { type: string, format: "date", example: "2025-12-21" }
               reception_time: { type: string, example: "19:00 WIB" }
-              reception_location:
-                { type: string, example: "Gedung Pontianak Convention Center" }
+              reception_location: { type: string, example: "Gedung Pontianak Convention Center" }
               gmaps_link: { type: string, format: "uri", nullable: true }
               prewedding_photo: { type: string, format: binary, nullable: true }
 

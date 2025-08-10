@@ -1,13 +1,15 @@
 openapi: 3.0.3
 info:
   title: Dua Insan Story API - Admin
-  description: Dokumentasi API lengkap untuk alur kerja sisi admin, termasuk manajemen produk, kategori, opsi, dan pesanan.
+  description: Dokumentasi API lengkap untuk alur kerja sisi admin, termasuk manajemen produk, kategori, pengguna, dan lainnya.
   version: 1.0.0
 servers:
   - url: http://127.0.0.1:8000/api/v1
     description: Server Pengembangan Lokal
 
 tags:
+  - name: Admin - Pengguna
+    description: Mengelola akun administrator.
   - name: Admin - Kategori Produk
     description: Mengelola kategori produk.
   - name: Admin - Produk
@@ -29,12 +31,120 @@ tags:
 # PATHS (DEFINISI ENDPOINT)
 # ===============================================================
 paths:
+  # ------------------ ADMIN: PENGGUNA ------------------
+  /admin/users:
+    get:
+      tags: [Admin - Pengguna]
+      summary: (Admin) Daftar semua akun admin
+      description: Mengambil daftar semua pengguna dengan peran 'admin'.
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Daftar admin berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+    post:
+      tags: [Admin - Pengguna]
+      summary: (Admin) Buat akun admin baru
+      description: Membuat akun pengguna baru dengan peran 'admin'.
+      security:
+        - sanctum: []
+      requestBody:
+        $ref: "#/components/requestBodies/StoreUserBody"
+      responses:
+        "201":
+          description: Akun admin berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+  /admin/users/{userId}:
+    get:
+      tags: [Admin - Pengguna]
+      summary: (Admin) Lihat detail akun admin
+      description: Mengambil detail informasi dari satu akun admin berdasarkan ID-nya.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Detail admin berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    put:
+      tags: [Admin - Pengguna]
+      summary: (Admin) Perbarui akun admin
+      description: Memperbarui data akun admin yang sudah ada.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateUserBody"
+      responses:
+        "200":
+          description: Akun admin berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    delete:
+      tags: [Admin - Pengguna]
+      summary: (Admin) Hapus akun admin
+      description: Menghapus sebuah akun admin. Admin tidak dapat menghapus akunnya sendiri.
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
   # ------------------ ADMIN: KATEGORI PRODUK ------------------
   /admin/product-categories:
     get:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Daftar semua kategori produk
-      description: Mengambil daftar lengkap semua kategori produk yang ada di sistem.
       security:
         - sanctum: []
       responses:
@@ -51,11 +161,9 @@ paths:
                       $ref: "#/components/schemas/ProductCategory"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-
     post:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Buat kategori produk baru
-      description: Membuat kategori produk baru dengan nama, deskripsi, dan sebuah gambar opsional.
       security:
         - sanctum: []
       requestBody:
@@ -71,12 +179,10 @@ paths:
           $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-
   /admin/product-categories/{productCategoryId}:
     get:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Lihat detail kategori produk
-      description: Mengambil detail informasi dari satu kategori produk berdasarkan ID-nya.
       security:
         - sanctum: []
       parameters:
@@ -95,13 +201,10 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-
-    post:
+    post: # Menggunakan POST untuk method spoofing PUT/PATCH dengan multipart/form-data
       tags: [Admin - Kategori Produk]
       summary: (Admin) Perbarui kategori produk
-      description: |
-        Memperbarui data kategori produk yang sudah ada. 
-        **Penting:** Karena pembaruan ini mendukung unggah file, metode yang digunakan adalah `POST` dengan menyertakan field `_method` bernilai `PUT` atau `PATCH` di dalam `form-data`.
+      description: Memperbarui data kategori produk yang sudah ada. Karena mendukung unggah file, metode yang digunakan adalah `POST` dengan menyertakan field `_method` bernilai `PUT` dalam form-data.
       security:
         - sanctum: []
       parameters:
@@ -121,7 +224,6 @@ paths:
           $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-
     delete:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Hapus kategori produk
@@ -148,307 +250,665 @@ paths:
   /admin/products:
     get:
       tags: [Admin - Produk]
-      summary: (Admin) Lihat semua produk
-      security: [{ sanctum: [] }]
+      summary: (Admin) Daftar semua produk
+      security:
+        - sanctum: []
       responses:
-        "200": { description: OK }
+        "200":
+          description: Daftar produk berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     post:
       tags: [Admin - Produk]
       summary: (Admin) Buat produk baru
-      security: [{ sanctum: [] }]
+      security:
+        - sanctum: []
       requestBody:
         $ref: "#/components/requestBodies/StoreProductBody"
       responses:
-        "201": { description: Created }
-        "422": { $ref: "#/components/responses/ValidationError" }
-
+        "201":
+          description: Produk berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/products/{productId}:
     get:
       tags: [Admin - Produk]
       summary: (Admin) Lihat detail produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
       responses:
-        "200": { description: OK }
-    patch:
+        "200":
+          description: Detail produk berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Product"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    put:
       tags: [Admin - Produk]
-      summary: (Admin) Update produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      summary: (Admin) Perbarui produk
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
       requestBody:
         $ref: "#/components/requestBodies/UpdateProductBody"
       responses:
-        "200": { description: OK }
+        "200":
+          description: Produk berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     delete:
       tags: [Admin - Produk]
       summary: (Admin) Hapus produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: GAMBAR PRODUK ------------------
   /admin/products/{productId}/images:
     post:
       tags: [Admin - Gambar Produk]
-      summary: (Admin) Unggah gambar produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      summary: (Admin) Unggah gambar untuk produk
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
       requestBody:
         $ref: "#/components/requestBodies/StoreProductImageBody"
       responses:
-        "201": { description: Created }
+        "201":
+          description: Gambar berhasil diunggah.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "3 gambar berhasil diunggah."
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProductImage"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/images/{imageId}:
     delete:
       tags: [Admin - Gambar Produk]
       summary: (Admin) Hapus gambar produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ImageId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ImageId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: ITEM TAMBAHAN (ADD-ONS) ------------------
   /admin/add-ons:
     get:
       tags: [Admin - Item Tambahan]
-      summary: (Admin) Lihat semua item tambahan
-      security: [{ sanctum: [] }]
+      summary: (Admin) Daftar semua item tambahan
+      security:
+        - sanctum: []
       responses:
-        "200": { description: OK }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AddOn'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     post:
       tags: [Admin - Item Tambahan]
-      summary: (Admin) Buat item tambahan
-      security: [{ sanctum: [] }]
+      summary: (Admin) Buat item tambahan baru
+      security:
+        - sanctum: []
       requestBody:
         $ref: "#/components/requestBodies/StoreAddOnBody"
       responses:
-        "201": { description: Created }
+        "201":
+          description: Item tambahan berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddOnResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/add-ons/{addOnId}:
     get:
       tags: [Admin - Item Tambahan]
       summary: (Admin) Lihat detail item tambahan
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AddOnId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AddOnId"
       responses:
-        "200": { description: OK }
-    patch:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AddOn'
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    put:
       tags: [Admin - Item Tambahan]
-      summary: (Admin) Update item tambahan
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AddOnId" }]
+      summary: (Admin) Perbarui item tambahan
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AddOnId"
       requestBody:
         $ref: "#/components/requestBodies/UpdateAddOnBody"
       responses:
-        "200": { description: OK }
+        "200":
+          description: Item tambahan berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddOnResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     delete:
       tags: [Admin - Item Tambahan]
       summary: (Admin) Hapus item tambahan
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AddOnId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AddOnId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "409":
+          description: Gagal menghapus karena item tambahan masih terhubung dengan produk.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: ATRIBUT ------------------
   /admin/attributes:
     get:
       tags: [Admin - Atribut]
-      summary: (Admin) Lihat semua atribut
-      security: [{ sanctum: [] }]
+      summary: (Admin) Daftar semua atribut
+      security:
+        - sanctum: []
       responses:
-        "200": { description: OK }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Attribute'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     post:
       tags: [Admin - Atribut]
-      summary: (Admin) Buat atribut
-      security: [{ sanctum: [] }]
+      summary: (Admin) Buat atribut baru
+      security:
+        - sanctum: []
       requestBody:
         $ref: "#/components/requestBodies/StoreAttributeBody"
       responses:
-        "201": { description: Created }
+        "201":
+          description: Atribut berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/attributes/{attributeId}:
     get:
       tags: [Admin - Atribut]
       summary: (Admin) Lihat detail atribut
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AttributeId"
       responses:
-        "200": { description: OK }
-    patch:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Attribute'
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    put:
       tags: [Admin - Atribut]
-      summary: (Admin) Update atribut
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      summary: (Admin) Perbarui atribut
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AttributeId"
       requestBody:
         $ref: "#/components/requestBodies/UpdateAttributeBody"
       responses:
-        "200": { description: OK }
+        "200":
+          description: Atribut berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     delete:
       tags: [Admin - Atribut]
       summary: (Admin) Hapus atribut
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AttributeId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "409":
+          description: Gagal menghapus karena atribut masih memiliki nilai terkait.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: NILAI ATRIBUT ------------------
   /admin/attributes/{attributeId}/values:
     post:
       tags: [Admin - Nilai Atribut]
-      summary: (Admin) Buat nilai atribut baru untuk sebuah atribut
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/AttributeId" }]
+      summary: (Admin) Buat nilai untuk atribut
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/AttributeId"
       requestBody:
         $ref: "#/components/requestBodies/StoreAttributeValueBody"
       responses:
-        "201": { description: Created }
+        "201":
+          description: Nilai atribut berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeValueResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/values/{valueId}:
-    patch:
+    put:
       tags: [Admin - Nilai Atribut]
-      summary: (Admin) Update nilai atribut
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ValueId" }]
+      summary: (Admin) Perbarui nilai atribut
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ValueId"
       requestBody:
         $ref: "#/components/requestBodies/UpdateAttributeValueBody"
       responses:
-        "200": { description: OK }
+        "200":
+          description: Nilai atribut berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeValueResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     delete:
       tags: [Admin - Nilai Atribut]
       summary: (Admin) Hapus nilai atribut
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ValueId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ValueId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "409":
+          description: Gagal menghapus karena nilai atribut masih digunakan oleh produk.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: OPSI PRODUK ------------------
   /admin/products/{productId}/options:
     post:
       tags: [Admin - Opsi Produk]
       summary: (Admin) Tautkan opsi ke produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
       requestBody:
         $ref: "#/components/requestBodies/StoreProductOptionBody"
       responses:
-        "201": { description: Created }
+        "201":
+          description: Opsi produk berhasil ditambahkan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOptionResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/options/{optionId}:
-    patch:
+    put:
       tags: [Admin - Opsi Produk]
-      summary: (Admin) Update opsi produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/OptionId" }]
+      summary: (Admin) Perbarui opsi produk
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/OptionId"
       requestBody:
         $ref: "#/components/requestBodies/UpdateProductOptionBody"
       responses:
-        "200": { description: OK }
+        "200":
+          description: Opsi produk berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOptionResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
     delete:
       tags: [Admin - Opsi Produk]
       summary: (Admin) Hapus opsi dari produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/OptionId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/OptionId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
   # ------------------ ADMIN: TAUTAN ITEM TAMBAHAN ------------------
   /admin/products/{productId}/add-ons:
     post:
       tags: [Admin - Tautan Item Tambahan]
       summary: (Admin) Tautkan item tambahan ke produk
-      security: [{ sanctum: [] }]
-      parameters: [{ $ref: "#/components/parameters/ProductId" }]
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
       requestBody:
         $ref: "#/components/requestBodies/StoreProductAddOnBody"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
   /admin/products/{productId}/add-ons/{addOnId}:
     delete:
       tags: [Admin - Tautan Item Tambahan]
       summary: (Admin) Lepas tautan item tambahan dari produk
-      security: [{ sanctum: [] }]
+      security:
+        - sanctum: []
       parameters:
-        - { $ref: "#/components/parameters/ProductId" }
-        - { $ref: "#/components/parameters/AddOnId" }
+        - $ref: "#/components/parameters/ProductId"
+        - $ref: "#/components/parameters/AddOnId"
       responses:
-        "200": { $ref: "#/components/responses/SuccessMessage" }
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
 
 # ===============================================================
 # COMPONENTS (BAGIAN YANG DAPAT DIGUNAKAN KEMBALI)
 # ===============================================================
 components:
   schemas:
+    User:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        full_name: { type: string, example: "Administrator" }
+        email: { type: string, format: email, example: "admin@example.com" }
+        phone_number: { type: string, nullable: true, example: "081234567890" }
+        role: { type: string, example: "admin" }
+        created_at: { type: string, format: date-time, readOnly: true }
+    UserResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Akun admin berhasil dibuat." }
+        data: { $ref: "#/components/schemas/User" }
+
     ProductCategory:
       type: object
-      description: Representasi dari sebuah kategori produk.
       properties:
-        id:
-          type: integer
-          description: ID unik untuk kategori.
-          example: 1
-        name:
-          type: string
-          description: Nama kategori.
-          example: "Undangan Pernikahan"
-        slug:
-          type: string
-          description: Versi URL-friendly dari nama kategori.
-          example: "undangan-pernikahan"
-          readOnly: true
-        description:
-          type: string
-          nullable: true
-          description: Deskripsi singkat tentang kategori.
-          example: "Berbagai macam desain undangan untuk hari spesial Anda."
-        image_url:
-          type: string
-          format: url
-          nullable: true
-          description: URL lengkap ke gambar kategori.
-          example: "http://127.0.0.1:8000/storage/product-categories/image.jpg"
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          description: Waktu kapan kategori dibuat.
-          example: "2025-08-08T17:00:00.000000Z"
-          readOnly: true
-
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Undangan Pernikahan" }
+        slug: { type: string, example: "undangan-pernikahan", readOnly: true }
+        description: { type: string, nullable: true }
+        image_url: { type: string, format: url, nullable: true, readOnly: true }
+        created_at: { type: string, format: date-time, readOnly: true }
     ProductCategoryResponse:
       type: object
       properties:
-        message:
-          type: string
-          example: "Kategori produk berhasil dibuat."
-        data:
-          $ref: "#/components/schemas/ProductCategory"
+        message: { type: string, example: "Kategori produk berhasil dibuat." }
+        data: { $ref: "#/components/schemas/ProductCategory" }
+
+    Product:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Undangan Digital Elegan" }
+        description: { type: string, nullable: true }
+        base_price: { type: integer, example: 5000 }
+        min_order_quantity: { type: integer, example: 100 }
+        is_active: { type: boolean, example: true }
+        created_at: { type: string, format: date-time, readOnly: true }
+        category: { $ref: "#/components/schemas/ProductCategory" }
+    ProductResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Produk berhasil dibuat." }
+        data: { $ref: "#/components/schemas/Product" }
+
+    ProductImage:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        image_url: { type: string, format: url, readOnly: true }
+        alt_text: { type: string, nullable: true }
+        is_featured: { type: boolean }
+
+    AddOn:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Laminasi Doff" }
+        price: { type: integer, example: 500 }
+    AddOnResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Item tambahan berhasil dibuat." }
+        data: { $ref: "#/components/schemas/AddOn" }
+
+    Attribute:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Ukuran" }
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+    AttributeResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Atribut berhasil dibuat." }
+        data: { $ref: "#/components/schemas/Attribute" }
+
+    AttributeValue:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        value: { type: string, example: "A5" }
+    AttributeValueResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Nilai atribut berhasil dibuat." }
+        data: { $ref: "#/components/schemas/AttributeValue" }
+
+    ProductOption:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: "Ukuran", description: "Nama atribut induk." }
+        price_adjustment: { type: integer, example: 0 }
+        value: { $ref: "#/components/schemas/AttributeValue" }
+    ProductOptionResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Opsi produk berhasil ditambahkan." }
+        data: { $ref: "#/components/schemas/ProductOption" }
 
     GenericError:
       type: object
       properties:
-        message:
-          type: string
-          example: "Sumber daya tidak ditemukan."
-
+        message: { type: string, example: "Sumber daya tidak ditemukan." }
     ErrorValidation:
       type: object
       properties:
-        message:
-          type: string
-          example: "The given data was invalid."
+        message: { type: string, example: "The given data was invalid." }
         errors:
           type: object
-          description: Kumpulan pesan error validasi.
           additionalProperties:
             type: array
             items:
               type: string
               example: "Nama kategori wajib diisi."
-
     SuccessMessage:
       type: object
       properties:
-        message:
-          type: string
-          example: "Operasi berhasil."
+        message: { type: string, example: "Operasi berhasil." }
 
   requestBodies:
+    StoreUserBody:
+      description: Data untuk membuat akun admin baru.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [full_name, email, password, password_confirmation]
+            properties:
+              full_name: { type: string, example: "John Doe" }
+              email: { type: string, format: email, example: "johndoe@example.com" }
+              password: { type: string, format: password, example: "password123" }
+              password_confirmation: { type: string, format: password, example: "password123" }
+              phone_number: { type: string, nullable: true, example: "08123456789" }
+    UpdateUserBody:
+      description: Data untuk memperbarui akun admin.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              full_name: { type: string }
+              email: { type: string, format: email }
+              password: { type: string, format: password, nullable: true, description: "Isi hanya jika ingin mengubah password." }
+              password_confirmation: { type: string, format: password }
+              phone_number: { type: string, nullable: true }
+
     StoreProductCategoryBody:
       description: Data untuk membuat kategori produk baru.
       required: true
@@ -458,49 +918,23 @@ components:
             type: object
             required: [name]
             properties:
-              name:
-                type: string
-                description: Nama untuk kategori baru.
-                example: "Buku Tamu"
-              description:
-                type: string
-                nullable: true
-                description: Deskripsi opsional untuk kategori.
-              image:
-                type: string
-                format: binary
-                description: File gambar untuk kategori (opsional).
-          encoding:
-            image:
-              contentType: image/png, image/jpeg, image/gif, image/webp
-
+              name: { type: string, example: "Buku Tamu" }
+              description: { type: string, nullable: true }
+              image: { type: string, format: binary, description: "File gambar opsional." }
     UpdateProductCategoryBody:
-      description: Data untuk memperbarui kategori produk. Gunakan `_method`=`PUT` untuk method spoofing.
+      description: "Data untuk memperbarui kategori. Gunakan 'POST' dengan `_method: 'PUT'` karena `multipart/form-data`."
       required: true
       content:
         multipart/form-data:
           schema:
             type: object
+            required: [_method]
             properties:
-              _method:
-                type: string
-                description: "Wajib diisi dengan 'PUT' atau 'PATCH' untuk method spoofing."
-                example: "PUT"
-              name:
-                type: string
-                description: Nama baru untuk kategori.
-                example: "Buku Tamu Pernikahan"
-              description:
-                type: string
-                nullable: true
-                description: Deskripsi baru untuk kategori.
-              image:
-                type: string
-                format: binary
-                description: "File gambar baru (opsional). Mengunggah gambar baru akan menggantikan yang lama."
-          encoding:
-            image:
-              contentType: image/png, image/jpeg, image/gif, image/webp
+              _method: { type: string, example: "PUT" }
+              name: { type: string }
+              description: { type: string, nullable: true }
+              image: { type: string, format: binary, nullable: true }
+
     StoreProductBody:
       description: Data untuk produk baru.
       content:
@@ -511,11 +945,10 @@ components:
             properties:
               category_id: { type: integer, example: 1 }
               name: { type: string, example: "Undangan Klasik Elegan" }
-              sku: { type: string, nullable: true, example: "SS-005" }
               description: { type: string, nullable: true }
               base_price: { type: integer, example: 5000 }
-              min_order_quantity: { type: integer, example: 100 }
-              is_active: { type: boolean, example: true }
+              min_order_quantity: { type: integer, default: 100, example: 100 }
+              is_active: { type: boolean, default: true, example: true }
     UpdateProductBody:
       description: Data untuk memperbarui produk.
       content:
@@ -525,25 +958,36 @@ components:
             properties:
               category_id: { type: integer }
               name: { type: string }
-              sku: { type: string, nullable: true }
               description: { type: string, nullable: true }
               base_price: { type: integer }
               min_order_quantity: { type: integer }
               is_active: { type: boolean }
+
     StoreProductImageBody:
-      description: Data untuk mengunggah gambar produk.
+      description: Unggah satu atau lebih gambar untuk sebuah produk.
       content:
         multipart/form-data:
           schema:
             type: object
             required: [images]
             properties:
-              images: { type: array, items: { type: string, format: binary } }
+              images:
+                type: array
+                items:
+                  type: string
+                  format: binary
               alt_texts:
-                { type: array, nullable: true, items: { type: string } }
-              is_featured_index: { type: integer, nullable: true }
+                type: array
+                nullable: true
+                items:
+                  type: string
+              is_featured_index:
+                type: integer
+                nullable: true
+                description: "Index (mulai dari 0) dari gambar di array `images` yang ingin dijadikan featured."
+
     StoreAddOnBody:
-      description: Data untuk item tambahan.
+      description: Data untuk item tambahan baru.
       content:
         application/json:
           schema:
@@ -561,6 +1005,7 @@ components:
             properties:
               name: { type: string }
               price: { type: integer }
+
     StoreAttributeBody:
       description: Data untuk atribut baru.
       content:
@@ -578,6 +1023,7 @@ components:
             type: object
             properties:
               name: { type: string }
+
     StoreAttributeValueBody:
       description: Data untuk nilai atribut baru.
       content:
@@ -595,6 +1041,7 @@ components:
             type: object
             properties:
               value: { type: string }
+
     StoreProductOptionBody:
       description: Data untuk menautkan nilai atribut ke produk.
       content:
@@ -603,21 +1050,18 @@ components:
             type: object
             required: [attribute_value_id, price_adjustment]
             properties:
-              attribute_value_id: { type: integer }
-              price_adjustment:
-                {
-                  type: integer,
-                  example: 1000,
-                  description: "Bisa positif/negatif/nol",
-                }
+              attribute_value_id: { type: integer, example: 2 }
+              price_adjustment: { type: integer, example: 1000, description: "Bisa positif/negatif/nol" }
     UpdateProductOptionBody:
-      description: Data untuk memperbarui opsi produk.
+      description: Data untuk memperbarui penyesuaian harga opsi produk.
       content:
         application/json:
           schema:
             type: object
+            required: [price_adjustment]
             properties:
               price_adjustment: { type: integer }
+
     StoreProductAddOnBody:
       description: Data untuk menautkan item tambahan ke produk.
       content:
@@ -626,9 +1070,16 @@ components:
             type: object
             required: [add_on_id]
             properties:
-              add_on_id: { type: integer }
+              add_on_id: { type: integer, example: 3 }
 
   parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: ID numerik dari pengguna.
+      schema:
+        type: integer
     ProductCategoryId:
       name: productCategoryId
       in: path
@@ -636,42 +1087,41 @@ components:
       description: ID numerik dari kategori produk.
       schema:
         type: integer
-        example: 1
     ProductId:
       name: productId
       in: path
       required: true
-      description: ID dari produk
+      description: ID dari produk.
       schema: { type: integer }
     ImageId:
       name: imageId
       in: path
       required: true
-      description: ID dari gambar produk
+      description: ID dari gambar produk.
       schema: { type: integer }
     AddOnId:
       name: addOnId
       in: path
       required: true
-      description: ID dari item tambahan
+      description: ID dari item tambahan.
       schema: { type: integer }
     AttributeId:
       name: attributeId
       in: path
       required: true
-      description: ID dari atribut
+      description: ID dari atribut.
       schema: { type: integer }
     ValueId:
       name: valueId
       in: path
       required: true
-      description: ID dari nilai atribut
+      description: ID dari nilai atribut.
       schema: { type: integer }
     OptionId:
       name: optionId
       in: path
       required: true
-      description: ID dari opsi produk (dari tabel product_options)
+      description: ID dari opsi produk (dari tabel product_options).
       schema: { type: integer }
 
   responses:
