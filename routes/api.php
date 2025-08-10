@@ -37,6 +37,7 @@ Route::prefix('v1/admin')
     ->middleware(['auth:sanctum', 'role:admin'])
     ->name('admin.v1.')
     ->group(function () {
+        Route::apiResource('users', Admin\UserController::class);
         Route::apiResource('product-categories', Admin\ProductCategoryController::class);
         Route::apiResource('products', Admin\ProductController::class);
         Route::apiResource('products.images', Admin\ProductImageController::class)
