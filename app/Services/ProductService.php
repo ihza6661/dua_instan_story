@@ -23,10 +23,6 @@ class ProductService
 
     public function deleteProduct(Product $product): void
     {
-        // Nanti bisa ditambahkan pengecekan, misal:
-        // if ($product->orderItems()->exists()) {
-        //     throw new \Exception('Produk tidak dapat dihapus karena sudah ada dalam pesanan.');
-        // }
         $product->delete();
     }
 

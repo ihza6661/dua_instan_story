@@ -9,9 +9,7 @@ class ProductCategoryService
 {
     public function getAllCategories(): Collection
     {
-        return ProductCategory::whereHas('products', function ($query) {
-            $query->where('is_active', true);
-        })->latest()->get();
+        return ProductCategory::all();
     }
 
     public function findCategoryById(int $id): ProductCategory
