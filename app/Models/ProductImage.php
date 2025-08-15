@@ -11,11 +11,13 @@ class ProductImage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id',
+        'product_variant_id',
         'image',
         'alt_text',
         'is_featured',
     ];
+
+    protected $appends = ['image_url'];
 
     protected function casts(): array
     {
@@ -24,9 +26,9 @@ class ProductImage extends Model
         ];
     }
 
-    public function product()
+    public function variant()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
     public function getImageUrlAttribute(): ?string

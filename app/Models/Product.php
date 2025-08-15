@@ -36,21 +36,6 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
-    public function featuredImage(): HasOne
-    {
-        return $this->hasOne(ProductImage::class)->where('is_featured', true);
-    }
-
-    public function firstImage(): HasOne
-    {
-        return $this->hasOne(ProductImage::class)->oldestOfMany();
-    }
-
-    public function options()
-    {
-        return $this->hasMany(ProductOption::class);
-    }
-
     public function addOns()
     {
         return $this->belongsToMany(AddOn::class, 'product_add_ons');
@@ -69,5 +54,10 @@ class Product extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 }

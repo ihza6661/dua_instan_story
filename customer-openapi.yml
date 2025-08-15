@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Dua Insan Story API - Pelanggan
   description: Dokumentasi API lengkap untuk alur kerja sisi pelanggan, mulai dari melihat produk hingga checkout.
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: http://127.0.0.1:8000/api/v1
     description: Server Pengembangan Lokal
@@ -400,7 +400,7 @@ components:
         id: { type: integer, example: 1 }
         name: { type: string, example: "Undangan Elegan" }
         description: { type: string, nullable: true }
-        base_price: { type: integer, example: 5000 }
+        base_price: { type: integer, example: 5000, description: "Harga mulai dari." }
         min_order_quantity: { type: integer, example: 100 }
         is_active: { type: boolean }
         featured_image: { $ref: "#/components/schemas/ProductImage" }
@@ -413,18 +413,20 @@ components:
             - type: object
               properties:
                 category: { $ref: "#/components/schemas/ProductCategory" }
-                images:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/ProductImage"
-                options:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/ProductOption"
                 add_ons:
                   type: array
                   items:
                     $ref: "#/components/schemas/AddOn"
+                grouped_options:
+                  type: object
+                  description: "Opsi yang tersedia, dikelompokkan berdasarkan nama atributnya."
+                  example:
+                    Warna: [ { id: 1, value: "Merah", attribute_name: "Warna" } ]
+                    Ukuran: [ { id: 3, value: "M", attribute_name: "Ukuran" } ]
+                variants:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ProductVariant"
 
     ProductImage:
       type: object
@@ -434,18 +436,26 @@ components:
         alt_text: { type: string, nullable: true, example: "Tampak depan undangan elegan" }
         is_featured: { type: boolean, example: true }
 
-    ProductOption:
+    ProductVariant:
       type: object
       properties:
-        id: { type: integer, example: 1 }
-        name: { type: string, example: "Ukuran", description: "Nama atribut induk." }
-        price_adjustment: { type: integer, example: -500 }
-        value: { $ref: "#/components/schemas/AttributeValue" }
+        id: { type: integer, example: 101 }
+        price: { type: integer, example: 5500 }
+        stock: { type: integer, example: 50 }
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
     AttributeValue:
       type: object
       properties:
         id: { type: integer, example: 2 }
-        value: { type: string, example: "Kecil" }
+        value: { type: string, example: "Merah" }
+        attribute_name: { type: string, example: "Warna" }
     AddOn:
       type: object
       properties:
@@ -459,7 +469,7 @@ components:
         id: { type: integer, example: 1 }
         session_id: { type: string, format: uuid, nullable: true }
         total_items: { type: integer, example: 150, description: "Jumlah total semua item." }
-        subtotal: { type: integer, example: 40500000, description: "Total harga sebelum ongkir/pajak." }
+        subtotal: { type: integer, example: 825000, description: "Total harga sebelum ongkir/pajak." }
         items:
           type: array
           items:
@@ -473,17 +483,18 @@ components:
       properties:
         id: { type: integer, example: 1 }
         quantity: { type: integer, example: 150 }
-        unit_price: { type: integer, example: 270000 }
-        sub_total: { type: integer, example: 40500000 }
+        unit_price: { type: integer, example: 5500 }
+        sub_total: { type: integer, example: 825000 }
         customization_details: { type: object, description: "Detail kustomisasi yang dipilih." }
         product: { $ref: "#/components/schemas/Product" }
+        variant: { $ref: "#/components/schemas/ProductVariant" }
 
     Order:
       type: object
       properties:
         id: { type: integer, example: 1 }
         order_number: { type: string, example: "INV-1754321098-ABCD" }
-        total_amount: { type: integer, example: 40500000 }
+        total_amount: { type: integer, example: 825000 }
         shipping_address: { type: string }
         order_status: { type: string, example: "pending_payment" }
         created_at: { type: string, format: "date-time" }
@@ -499,6 +510,7 @@ components:
         unit_price: { type: integer }
         sub_total: { type: integer }
         product: { $ref: "#/components/schemas/Product" }
+        variant: { $ref: "#/components/schemas/ProductVariant" }
         custom_data: { type: object, nullable: true, description: "Berisi data form checkout untuk item ini" }
 
     PaginatedProducts:
@@ -563,11 +575,10 @@ components:
         application/json:
           schema:
             type: object
-            required: [product_id, quantity]
+            required: [variant_id, quantity]
             properties:
-              product_id: { type: integer, example: 1 }
+              variant_id: { type: integer, example: 101 }
               quantity: { type: integer, example: 100 }
-              options: { type: array, items: { type: integer }, example: [1, 3], description: "Array of product_option_id" }
               add_ons: { type: array, items: { type: integer }, example: [1], description: "Array of add_on_id" }
     UpdateCartItemBody:
       description: Jumlah kuantitas baru.

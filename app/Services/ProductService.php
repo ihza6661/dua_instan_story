@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -28,22 +29,26 @@ class ProductService
             throw new Exception('Produk tidak dapat dihapus karena sudah ada dalam pesanan atau keranjang belanja pelanggan.');
         }
 
-        foreach ($product->images as $image) {
-            $this->deleteProductImage($image);
+        $product->load('variants.images');
+
+        foreach ($product->variants as $variant) {
+            foreach ($variant->images as $image) {
+                $this->deleteProductImage($image);
+            }
         }
 
         $product->delete();
     }
 
-    public function addImageToProduct(Product $product, UploadedFile $imageFile, array $data): ProductImage
+    public function addImageToVariant(ProductVariant $variant, UploadedFile $imageFile, array $data): ProductImage
     {
         $path = $imageFile->store('product-images', 'public');
 
         if (!empty($data['is_featured'])) {
-            $product->images()->where('is_featured', true)->update(['is_featured' => false]);
+            $variant->images()->where('is_featured', true)->update(['is_featured' => false]);
         }
 
-        return $product->images()->create([
+        return $variant->images()->create([
             'image' => $path,
             'alt_text' => $data['alt_text'] ?? null,
             'is_featured' => $data['is_featured'] ?? false,
@@ -58,7 +63,7 @@ class ProductService
 
     public function getPaginatedActiveProducts(?string $searchTerm = null, ?string $categorySlug = null): LengthAwarePaginator
     {
-        return Product::with(['category', 'featuredImage', 'firstImage'])
+        return Product::with(['category', 'variants.images'])
             ->where('is_active', true)
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
@@ -77,7 +82,7 @@ class ProductService
 
     public function findPubliclyVisibleProduct(int $productId): Product
     {
-        return Product::with('category')
+        return Product::with(['category', 'variants.images'])
             ->where('is_active', true)
             ->findOrFail($productId);
     }

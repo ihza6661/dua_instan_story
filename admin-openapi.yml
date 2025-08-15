@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Dua Insan Story API - Admin
-  description: Dokumentasi API lengkap untuk alur kerja sisi admin, termasuk manajemen produk, kategori, pengguna, dan lainnya.
-  version: 1.0.0
+  description: Dokumentasi API lengkap untuk alur kerja sisi admin, termasuk manajemen produk, varian, pengguna, dan lainnya.
+  version: 1.1.0
 servers:
   - url: http://127.0.0.1:8000/api/v1
     description: Server Pengembangan Lokal
@@ -15,17 +15,17 @@ tags:
   - name: Admin - Kategori Produk
     description: Mengelola kategori produk.
   - name: Admin - Produk
-    description: Mengelola produk.
-  - name: Admin - Gambar Produk
-    description: Mengelola gambar produk.
+    description: Mengelola produk dasar.
+  - name: Admin - Varian Produk
+    description: Mengelola varian (kombinasi opsi) untuk setiap produk.
+  - name: Admin - Gambar Varian
+    description: Mengelola gambar untuk setiap varian produk.
   - name: Admin - Item Tambahan
     description: Mengelola item tambahan (Add-ons).
   - name: Admin - Atribut
-    description: Mengelola atribut opsi (e.g., Ukuran).
+    description: Mengelola atribut (e.g., Ukuran, Warna).
   - name: Admin - Nilai Atribut
-    description: Mengelola nilai atribut (e.g., Kecil, Sedang).
-  - name: Admin - Opsi Produk
-    description: Menautkan opsi ke produk.
+    description: Mengelola nilai atribut (e.g., Kecil, Merah).
   - name: Admin - Tautan Item Tambahan
     description: Menautkan item tambahan ke produk.
 
@@ -38,7 +38,6 @@ paths:
     get:
       tags: [Admin - Pengguna]
       summary: (Admin) Daftar semua akun admin
-      description: Mengambil daftar semua pengguna dengan peran 'admin'.
       security:
         - sanctum: []
       responses:
@@ -60,7 +59,6 @@ paths:
     post:
       tags: [Admin - Pengguna]
       summary: (Admin) Buat akun admin baru
-      description: Membuat akun pengguna baru dengan peran 'admin'.
       security:
         - sanctum: []
       requestBody:
@@ -82,7 +80,6 @@ paths:
     get:
       tags: [Admin - Pengguna]
       summary: (Admin) Lihat detail akun admin
-      description: Mengambil detail informasi dari satu akun admin berdasarkan ID-nya.
       security:
         - sanctum: []
       parameters:
@@ -104,7 +101,6 @@ paths:
     put:
       tags: [Admin - Pengguna]
       summary: (Admin) Perbarui akun admin
-      description: Memperbarui data akun admin yang sudah ada.
       security:
         - sanctum: []
       parameters:
@@ -127,7 +123,6 @@ paths:
     delete:
       tags: [Admin - Pengguna]
       summary: (Admin) Hapus akun admin
-      description: Menghapus sebuah akun admin. Admin tidak dapat menghapus akunnya sendiri.
       security:
         - sanctum: []
       parameters:
@@ -141,7 +136,7 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-  
+
   # ------------------ ADMIN: GALERI ------------------
   /admin/gallery-items:
     get:
@@ -166,7 +161,6 @@ paths:
     post:
       tags: [Admin - Galeri]
       summary: (Admin) Unggah item galeri baru
-      description: Mengunggah file gambar atau video baru ke galeri.
       security:
         - sanctum: []
       requestBody:
@@ -204,7 +198,7 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-    post: # Menggunakan POST untuk method spoofing PUT/PATCH dengan multipart/form-data
+    post:
       tags: [Admin - Galeri]
       summary: (Admin) Perbarui item galeri
       description: Memperbarui data item galeri. Gunakan `_method`=`PUT` karena mendukung unggah file.
@@ -303,10 +297,10 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
-    post: # Menggunakan POST untuk method spoofing PUT/PATCH dengan multipart/form-data
+    post:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Perbarui kategori produk
-      description: Memperbarui data kategori produk yang sudah ada. Karena mendukung unggah file, metode yang digunakan adalah `POST` dengan menyertakan field `_method` bernilai `PUT` dalam form-data.
+      description: Memperbarui data kategori produk. Gunakan `_method`=`PUT` karena mendukung unggah file.
       security:
         - sanctum: []
       parameters:
@@ -329,7 +323,6 @@ paths:
     delete:
       tags: [Admin - Kategori Produk]
       summary: (Admin) Hapus kategori produk
-      description: Menghapus sebuah kategori produk. Operasi akan gagal jika kategori tersebut masih memiliki produk terkait.
       security:
         - sanctum: []
       parameters:
@@ -444,15 +437,100 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedError"
 
-  # ------------------ ADMIN: GAMBAR PRODUK ------------------
-  /admin/products/{productId}/images:
+  # ------------------ ADMIN: VARIAN PRODUK ------------------
+  /admin/products/{productId}/variants:
     post:
-      tags: [Admin - Gambar Produk]
-      summary: (Admin) Unggah gambar untuk produk
+      tags: [Admin - Varian Produk]
+      summary: (Admin) Buat varian baru untuk produk
       security:
         - sanctum: []
       parameters:
         - $ref: "#/components/parameters/ProductId"
+      requestBody:
+        $ref: "#/components/requestBodies/StoreProductVariantBody"
+      responses:
+        "201":
+          description: Varian berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariantResponse'
+        "409":
+          description: Gagal membuat karena kombinasi opsi sudah ada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /admin/variants/{variantId}:
+    get:
+      tags: [Admin - Varian Produk]
+      summary: (Admin) Lihat detail varian
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/VariantId"
+      responses:
+        "200":
+          description: Detail varian berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductVariant'
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    put:
+      tags: [Admin - Varian Produk]
+      summary: (Admin) Perbarui varian
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/VariantId"
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateProductVariantBody"
+      responses:
+        "200":
+          description: Varian berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariantResponse'
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    delete:
+      tags: [Admin - Varian Produk]
+      summary: (Admin) Hapus varian
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/VariantId"
+      responses:
+        "200":
+          $ref: "#/components/responses/SuccessMessage"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  # ------------------ ADMIN: GAMBAR VARIAN ------------------
+  /admin/variants/{variantId}/images:
+    post:
+      tags: [Admin - Gambar Varian]
+      summary: (Admin) Unggah gambar untuk varian
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/VariantId"
       requestBody:
         $ref: "#/components/requestBodies/StoreProductImageBody"
       responses:
@@ -476,8 +554,8 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
   /admin/images/{imageId}:
     delete:
-      tags: [Admin - Gambar Produk]
-      summary: (Admin) Hapus gambar produk
+      tags: [Admin - Gambar Varian]
+      summary: (Admin) Hapus gambar varian
       security:
         - sanctum: []
       parameters:
@@ -758,64 +836,6 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedError"
 
-  # ------------------ ADMIN: OPSI PRODUK ------------------
-  /admin/products/{productId}/options:
-    post:
-      tags: [Admin - Opsi Produk]
-      summary: (Admin) Tautkan opsi ke produk
-      security:
-        - sanctum: []
-      parameters:
-        - $ref: "#/components/parameters/ProductId"
-      requestBody:
-        $ref: "#/components/requestBodies/StoreProductOptionBody"
-      responses:
-        "201":
-          description: Opsi produk berhasil ditambahkan.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductOptionResponse'
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-  /admin/options/{optionId}:
-    put:
-      tags: [Admin - Opsi Produk]
-      summary: (Admin) Perbarui opsi produk
-      security:
-        - sanctum: []
-      parameters:
-        - $ref: "#/components/parameters/OptionId"
-      requestBody:
-        $ref: "#/components/requestBodies/UpdateProductOptionBody"
-      responses:
-        "200":
-          description: Opsi produk berhasil diperbarui.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductOptionResponse'
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-    delete:
-      tags: [Admin - Opsi Produk]
-      summary: (Admin) Hapus opsi dari produk
-      security:
-        - sanctum: []
-      parameters:
-        - $ref: "#/components/parameters/OptionId"
-      responses:
-        "200":
-          $ref: "#/components/responses/SuccessMessage"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
   # ------------------ ADMIN: TAUTAN ITEM TAMBAHAN ------------------
   /admin/products/{productId}/add-ons:
     post:
@@ -914,12 +934,37 @@ components:
         is_active: { type: boolean, example: true }
         created_at: { type: string, format: date-time, readOnly: true }
         category: { $ref: "#/components/schemas/ProductCategory" }
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariant'
     ProductResponse:
       type: object
       properties:
         message: { type: string, example: "Produk berhasil dibuat." }
         data: { $ref: "#/components/schemas/Product" }
     
+    ProductVariant:
+      type: object
+      properties:
+        id: { type: integer, example: 101 }
+        sku: { type: string, nullable: true, example: "UND-ELEG-MERAH-M" }
+        price: { type: integer, example: 5500 }
+        stock: { type: integer, example: 50 }
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+    ProductVariantResponse:
+      type: object
+      properties:
+        message: { type: string, example: "Varian produk berhasil dibuat." }
+        data: { $ref: "#/components/schemas/ProductVariant" }
+
     ProductImage:
       type: object
       properties:
@@ -966,31 +1011,14 @@ components:
         message: { type: string, example: "Nilai atribut berhasil dibuat." }
         data: { $ref: "#/components/schemas/AttributeValue" }
 
-    ProductOption:
-      type: object
-      properties:
-        id: { type: integer, example: 1 }
-        name: { type: string, example: "Ukuran", description: "Nama atribut induk." }
-        price_adjustment: { type: integer, example: 0 }
-        value: { $ref: "#/components/schemas/AttributeValue" }
-    ProductOptionResponse:
-      type: object
-      properties:
-        message: { type: string, example: "Opsi produk berhasil ditambahkan." }
-        data: { $ref: "#/components/schemas/ProductOption" }
-
     GenericError:
       type: object
       properties:
-        message:
-          type: string
-          example: "Sumber daya tidak ditemukan."
+        message: { type: string, example: "Sumber daya tidak ditemukan." }
     ErrorValidation:
       type: object
       properties:
-        message:
-          type: string
-          example: "The given data was invalid."
+        message: { type: string, example: "The given data was invalid." }
         errors:
           type: object
           additionalProperties:
@@ -1001,9 +1029,7 @@ components:
     SuccessMessage:
       type: object
       properties:
-        message:
-          type: string
-          example: "Operasi berhasil."
+        message: { type: string, example: "Operasi berhasil." }
 
   requestBodies:
     StoreUserBody:
@@ -1118,8 +1144,36 @@ components:
               min_order_quantity: { type: integer }
               is_active: { type: boolean }
 
+    StoreProductVariantBody:
+      description: Data untuk varian baru.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [price, options]
+            properties:
+              price: { type: integer, example: 5500 }
+              stock: { type: integer, example: 100 }
+              sku: { type: string, nullable: true, example: "UND-ELEG-01" }
+              options:
+                type: array
+                description: "Array berisi ID dari attribute_values."
+                items:
+                  type: integer
+                example: [1, 5]
+    UpdateProductVariantBody:
+      description: Data untuk memperbarui varian.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              price: { type: integer }
+              stock: { type: integer }
+              sku: { type: string, nullable: true }
+
     StoreProductImageBody:
-      description: Unggah satu atau lebih gambar untuk sebuah produk.
+      description: Unggah satu atau lebih gambar untuk sebuah varian.
       content:
         multipart/form-data:
           schema:
@@ -1136,11 +1190,10 @@ components:
                 nullable: true
                 items:
                   type: string
-              is_featured_index:
-                type: integer
-                nullable: true
-                description: "Index (mulai dari 0) dari gambar di array `images` yang ingin dijadikan featured."
-
+              is_featured:
+                type: boolean
+                description: "Tandai apakah gambar ini akan menjadi gambar utama varian."
+                
     StoreAddOnBody:
       description: Data untuk item tambahan baru.
       content:
@@ -1197,26 +1250,6 @@ components:
             properties:
               value: { type: string }
 
-    StoreProductOptionBody:
-      description: Data untuk menautkan nilai atribut ke produk.
-      content:
-        application/json:
-          schema:
-            type: object
-            required: [attribute_value_id, price_adjustment]
-            properties:
-              attribute_value_id: { type: integer, example: 2 }
-              price_adjustment: { type: integer, example: 1000, description: "Bisa positif/negatif/nol" }
-    UpdateProductOptionBody:
-      description: Data untuk memperbarui penyesuaian harga opsi produk.
-      content:
-        application/json:
-          schema:
-            type: object
-            required: [price_adjustment]
-            properties:
-              price_adjustment: { type: integer }
-
     StoreProductAddOnBody:
       description: Data untuk menautkan item tambahan ke produk.
       content:
@@ -1255,11 +1288,17 @@ components:
       required: true
       description: ID dari produk.
       schema: { type: integer }
+    VariantId:
+      name: variantId
+      in: path
+      required: true
+      description: ID dari varian produk.
+      schema: { type: integer }
     ImageId:
       name: imageId
       in: path
       required: true
-      description: ID dari gambar produk.
+      description: ID dari gambar produk/varian.
       schema: { type: integer }
     AddOnId:
       name: addOnId
@@ -1278,12 +1317,6 @@ components:
       in: path
       required: true
       description: ID dari nilai atribut.
-      schema: { type: integer }
-    OptionId:
-      name: optionId
-      in: path
-      required: true
-      description: ID dari opsi produk (dari tabel product_options).
       schema: { type: integer }
 
   responses:
@@ -1318,4 +1351,3 @@ components:
       type: http
       scheme: bearer
       description: "Masukkan token Bearer Anda. Contoh: 'Bearer 1|abcdef...'"
-

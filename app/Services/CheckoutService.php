@@ -23,9 +23,7 @@ class CheckoutService
             $validated = $request->validated();
 
             $invitationCategoryId = ProductCategory::where('slug', 'undangan-pernikahan')->firstOrFail()->id;
-
             $mainOrderItem = null;
-
             $photoPath = null;
             if ($request->hasFile('prewedding_photo')) {
                 $photoPath = $request->file('prewedding_photo')->store('prewedding-photos', 'public');
@@ -43,6 +41,7 @@ class CheckoutService
             foreach ($cart->items as $cartItem) {
                 $orderItem = $order->items()->create([
                     'product_id' => $cartItem->product_id,
+                    'product_variant_id' => $cartItem->product_variant_id,
                     'quantity' => $cartItem->quantity,
                     'unit_price' => $cartItem->unit_price,
                     'sub_total' => $cartItem->quantity * $cartItem->unit_price,
@@ -53,7 +52,7 @@ class CheckoutService
                         $orderItem->meta()->create([
                             'meta_key' => $option['name'],
                             'meta_value' => $option['value'],
-                            'meta_price' => $option['adjustment'],
+                            'meta_price' => 0,
                         ]);
                     }
                     foreach ($cartItem->customization_details['add_ons'] ?? [] as $addOn) {

@@ -41,13 +41,12 @@ Route::prefix('v1/admin')
         Route::apiResource('users', Admin\UserController::class);
         Route::apiResource('product-categories', Admin\ProductCategoryController::class);
         Route::apiResource('products', Admin\ProductController::class);
-        Route::apiResource('products.images', Admin\ProductImageController::class)
-            ->only(['store', 'destroy'])
-            ->shallow();
+        Route::post('variants/{variant}/images', [Admin\ProductImageController::class, 'store'])->name('variants.images.store');
+        Route::delete('images/{image}', [Admin\ProductImageController::class, 'destroy'])->name('images.destroy');
         Route::apiResource('add-ons', Admin\AddOnController::class);
         Route::apiResource('attributes', Admin\AttributeController::class);
         Route::apiResource('attributes.values', Admin\AttributeValueController::class)->shallow();
-        Route::apiResource('products.options', Admin\ProductOptionController::class)->shallow();
+        Route::apiResource('products.variants', Admin\ProductVariantController::class)->shallow();
         Route::post('products/{product}/add-ons', [Admin\ProductAddOnController::class, 'store'])->name('products.addons.store');
         Route::delete('products/{product}/add-ons/{add_on}', [Admin\ProductAddOnController::class, 'destroy'])->name('products.addons.destroy');
         Route::apiResource('gallery-items', Admin\GalleryItemController::class);

@@ -15,7 +15,8 @@ class ProductController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $products = Product::with(['category', 'featuredImage', 'firstImage'])->latest()->get();
+        $products = Product::with(['category', 'variants.images'])->latest()->get();
+
         return ProductResource::collection($products);
     }
 
@@ -30,7 +31,7 @@ class ProductController extends Controller
 
     public function show(Product $product): ProductResource
     {
-        $product->load(['category', 'images', 'options.attributeValue.attribute', 'addOns']);
+        $product->load(['category', 'variants.options.attribute', 'variants.images', 'addOns']);
         return new ProductResource($product);
     }
 
