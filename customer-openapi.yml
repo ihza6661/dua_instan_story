@@ -421,8 +421,8 @@ components:
                   type: object
                   description: "Opsi yang tersedia, dikelompokkan berdasarkan nama atributnya."
                   example:
-                    Warna: [ { id: 1, value: "Merah", attribute_name: "Warna" } ]
-                    Ukuran: [ { id: 3, value: "M", attribute_name: "Ukuran" } ]
+                    Warna: [ { id: 1, value: "Merah" } ]
+                    Ukuran: [ { id: 3, value: "M" } ]
                 variants:
                   type: array
                   items:
@@ -455,7 +455,6 @@ components:
       properties:
         id: { type: integer, example: 2 }
         value: { type: string, example: "Merah" }
-        attribute_name: { type: string, example: "Warna" }
     AddOn:
       type: object
       properties:
