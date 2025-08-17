@@ -21,7 +21,7 @@ class AttributeValueService
 
     public function deleteAttributeValue(AttributeValue $value): void
     {
-        if ($value->productOptions()->exists()) {
+        if ($value->productVariants()->exists()) {
             throw new Exception('Nilai atribut tidak dapat dihapus karena digunakan oleh produk.');
         }
         $value->delete();

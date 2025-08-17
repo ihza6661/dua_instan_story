@@ -19,8 +19,8 @@ class AttributeValue extends Model
         return $this->belongsTo(Attribute::class);
     }
 
-    public function productOptions()
+    public function productVariants()
     {
-        return $this->hasMany(ProductOption::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 }
