@@ -15,7 +15,15 @@ class Order extends Model
         'total_amount',
         'shipping_address',
         'order_status',
+        'custom_data',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'custom_data' => 'array',
+        ];
+    }
 
     public function customer()
     {

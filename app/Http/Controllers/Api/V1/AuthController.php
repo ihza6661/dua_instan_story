@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
-use App\Http\Resources\UserResource;
+/* use App\Http\Resources\UserResource; */
+use App\Http\Resources\V1\UserResource;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -43,11 +44,11 @@ class AuthController extends Controller
             ]
         ]);
     }
-    
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
-        
+
         return response()->json(['message' => 'Logout berhasil.']);
     }
 }

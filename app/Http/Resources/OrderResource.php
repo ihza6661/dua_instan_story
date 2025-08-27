@@ -16,7 +16,8 @@ class OrderResource extends JsonResource
             'shipping_address' => $this->shipping_address,
             'order_status' => $this->order_status,
             'created_at' => $this->created_at->toDateTimeString(),
-            'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            'items' => OrderItemResource::collection($this->items),
+            'custom_data' => $this->custom_data,
         ];
     }
 }

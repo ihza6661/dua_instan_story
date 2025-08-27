@@ -38,11 +38,6 @@ class OrderItem extends Model
         return $this->hasMany(OrderItemMeta::class);
     }
 
-    public function customData()
-    {
-        return $this->hasOne(OrderCustomData::class);
-    }
-
     public function designProofs()
     {
         return $this->hasMany(DesignProof::class);

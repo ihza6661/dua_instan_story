@@ -20,6 +20,8 @@ tags:
     description: Mengelola keranjang belanja untuk tamu dan pengguna terdaftar.
   - name: Checkout
     description: Memproses keranjang belanja menjadi pesanan (memerlukan login).
+  - name: Pesanan
+    description: Mengelola pesanan pengguna setelah checkout.
 
 # ===============================================================
 # PATHS (DEFINISI ENDPOINT)
@@ -335,6 +337,52 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationError"
 
+  # ------------------ PESANAN ------------------
+  /orders:
+    get:
+      tags:
+        - Pesanan
+      summary: Melihat daftar pesanan pengguna yang sudah login
+      security:
+        - sanctum: []
+      responses:
+        "200":
+          description: Daftar pesanan berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /orders/{orderId}:
+    get:
+      tags:
+        - Pesanan
+      summary: Melihat detail satu pesanan berdasarkan ID
+      security:
+        - sanctum: []
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Detail pesanan berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
 # ===============================================================
 # COMPONENTS (BAGIAN YANG DAPAT DIGUNAKAN KEMBALI)
 # ===============================================================
@@ -501,6 +549,15 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderItem"
+        custom_data:
+          type: object
+          properties:
+            bride_full_name: { type: string, example: "Adinda Putri" }
+            groom_full_name: { type: string, example: "Budi Setiawan" }
+            akad_date: { type: string, format: "date", example: "2025-12-20" }
+            akad_location: { type: string, example: "Masjid Raya Mujahidin" }
+            reception_date: { type: string, format: "date", example: "2025-12-21" }
+            reception_location: { type: string, example: "Gedung Pontianak Convention Center" }
     OrderItem:
       type: object
       properties:
@@ -644,6 +701,12 @@ components:
       name: cartItemId
       in: path
       description: ID dari item di keranjang.
+      required: true
+      schema: { type: integer }
+    OrderId:
+      name: orderId
+      in: path
+      description: ID dari pesanan.
       required: true
       schema: { type: integer }
 

@@ -21,6 +21,7 @@ class CheckoutService
 
         return DB::transaction(function () use ($request, $user, $cart) {
             $validated = $request->validated();
+            \Log::info('Validated data in CheckoutService:', $validated);
 
             $invitationCategoryId = ProductCategory::where('slug', 'undangan-pernikahan')->firstOrFail()->id;
             $mainOrderItem = null;
@@ -36,6 +37,22 @@ class CheckoutService
                 'total_amount' => $cartTotal,
                 'shipping_address' => $validated['shipping_address'],
                 'order_status' => 'pending_payment',
+                'custom_data' => [
+                    'bride_full_name' => $validated['bride_full_name'],
+                    'groom_full_name' => $validated['groom_full_name'],
+                    'bride_nickname' => $validated['bride_nickname'],
+                    'groom_nickname' => $validated['groom_nickname'],
+                    'bride_parents' => $validated['bride_parents'],
+                    'groom_parents' => $validated['groom_parents'],
+                    'akad_date' => $validated['akad_date'],
+                    'akad_time' => $validated['akad_time'],
+                    'akad_location' => $validated['akad_location'],
+                    'reception_date' => $validated['reception_date'],
+                    'reception_time' => $validated['reception_time'],
+                    'reception_location' => $validated['reception_location'],
+                    'gmaps_link' => $validated['gmaps_link'] ?? null,
+                    'prewedding_photo_path' => $photoPath,
+                ],
             ]);
 
             foreach ($cart->items as $cartItem) {
@@ -67,27 +84,6 @@ class CheckoutService
                 if ($cartItem->product->category_id === $invitationCategoryId && is_null($mainOrderItem)) {
                     $mainOrderItem = $orderItem;
                 }
-            }
-
-            if ($mainOrderItem) {
-                $mainOrderItem->customData()->create([
-                    'form_data' => [
-                        'bride_full_name' => $validated['bride_full_name'],
-                        'groom_full_name' => $validated['groom_full_name'],
-                        'bride_nickname' => $validated['bride_nickname'],
-                        'groom_nickname' => $validated['groom_nickname'],
-                        'bride_parents' => $validated['bride_parents'],
-                        'groom_parents' => $validated['groom_parents'],
-                        'akad_date' => $validated['akad_date'],
-                        'akad_time' => $validated['akad_time'],
-                        'akad_location' => $validated['akad_location'],
-                        'reception_date' => $validated['reception_date'],
-                        'reception_time' => $validated['reception_time'],
-                        'reception_location' => $validated['reception_location'],
-                        'gmaps_link' => $validated['gmaps_link'] ?? null,
-                        'prewedding_photo_path' => $photoPath,
-                    ]
-                ]);
             }
 
             $cart->items()->delete();
