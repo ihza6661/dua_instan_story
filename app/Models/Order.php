@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
@@ -15,17 +17,13 @@ class Order extends Model
         'total_amount',
         'shipping_address',
         'order_status',
-        'custom_data',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'custom_data' => 'array',
-        ];
-    }
+    protected $casts = [
+        'total_amount' => 'float',
+    ];
 
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_id');
     }
@@ -35,8 +33,23 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function payment()
+    public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
+    }
+
+    public function invitationDetail(): HasOne
+    {
+        return $this->hasOne(InvitationDetail::class);
+    }
+
+    public function shippingAddress(): BelongsTo
+    {
+        return $this->belongsTo(Address::class, 'shipping_address_id');
+    }
+
+    public function billingAddress(): BelongsTo
+    {
+        return $this->belongsTo(Address::class, 'billing_address_id');
     }
 }

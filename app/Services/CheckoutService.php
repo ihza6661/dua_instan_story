@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\InvitationDetail;
 use App\Models\Order;
-use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -21,40 +21,42 @@ class CheckoutService
 
         return DB::transaction(function () use ($request, $user, $cart) {
             $validated = $request->validated();
-            \Log::info('Validated data in CheckoutService:', $validated);
 
-            $invitationCategoryId = ProductCategory::where('slug', 'undangan-pernikahan')->firstOrFail()->id;
-            $mainOrderItem = null;
             $photoPath = null;
             if ($request->hasFile('prewedding_photo')) {
                 $photoPath = $request->file('prewedding_photo')->store('prewedding-photos', 'public');
             }
 
             $cartTotal = $cart->items->sum(fn($item) => $item->quantity * $item->unit_price);
+
+            // 1. Create the Order
             $order = Order::create([
                 'customer_id' => $user->id,
                 'order_number' => 'INV-' . time() . '-' . Str::upper(Str::random(4)),
                 'total_amount' => $cartTotal,
                 'shipping_address' => $validated['shipping_address'],
                 'order_status' => 'pending_payment',
-                'custom_data' => [
-                    'bride_full_name' => $validated['bride_full_name'],
-                    'groom_full_name' => $validated['groom_full_name'],
-                    'bride_nickname' => $validated['bride_nickname'],
-                    'groom_nickname' => $validated['groom_nickname'],
-                    'bride_parents' => $validated['bride_parents'],
-                    'groom_parents' => $validated['groom_parents'],
-                    'akad_date' => $validated['akad_date'],
-                    'akad_time' => $validated['akad_time'],
-                    'akad_location' => $validated['akad_location'],
-                    'reception_date' => $validated['reception_date'],
-                    'reception_time' => $validated['reception_time'],
-                    'reception_location' => $validated['reception_location'],
-                    'gmaps_link' => $validated['gmaps_link'] ?? null,
-                    'prewedding_photo_path' => $photoPath,
-                ],
             ]);
 
+            // 2. Create the Invitation Detail
+            $order->invitationDetail()->create([
+                'bride_full_name' => $validated['bride_full_name'],
+                'groom_full_name' => $validated['groom_full_name'],
+                'bride_nickname' => $validated['bride_nickname'],
+                'groom_nickname' => $validated['groom_nickname'],
+                'bride_parents' => $validated['bride_parents'],
+                'groom_parents' => $validated['groom_parents'],
+                'akad_date' => $validated['akad_date'],
+                'akad_time' => $validated['akad_time'],
+                'akad_location' => $validated['akad_location'],
+                'reception_date' => $validated['reception_date'],
+                'reception_time' => $validated['reception_time'],
+                'reception_location' => $validated['reception_location'],
+                'gmaps_link' => $validated['gmaps_link'] ?? null,
+                'prewedding_photo_path' => $photoPath,
+            ]);
+
+            // 3. Create Order Items from Cart
             foreach ($cart->items as $cartItem) {
                 $orderItem = $order->items()->create([
                     'product_id' => $cartItem->product_id,
@@ -64,6 +66,7 @@ class CheckoutService
                     'sub_total' => $cartItem->quantity * $cartItem->unit_price,
                 ]);
 
+                // Copy customization details if any
                 if (!empty($cartItem->customization_details)) {
                     foreach ($cartItem->customization_details['options'] ?? [] as $option) {
                         $orderItem->meta()->create([
@@ -80,12 +83,9 @@ class CheckoutService
                         ]);
                     }
                 }
-
-                if ($cartItem->product->category_id === $invitationCategoryId && is_null($mainOrderItem)) {
-                    $mainOrderItem = $orderItem;
-                }
             }
 
+            // 4. Clear the cart
             $cart->items()->delete();
 
             return $order;

@@ -61,7 +61,7 @@ class ProductService
         $image->delete();
     }
 
-    public function getPaginatedActiveProducts(?string $searchTerm = null, ?string $categorySlug = null): LengthAwarePaginator
+    public function getPaginatedActiveProducts(?string $searchTerm = null, ?string $categorySlug = null, ?string $minPrice = null, ?string $maxPrice = null): LengthAwarePaginator
     {
         return Product::with(['category', 'variants.images'])
             ->where('is_active', true)
@@ -74,6 +74,16 @@ class ProductService
             ->when($categorySlug, function ($query, $categorySlug) {
                 $query->whereHas('category', function ($subQuery) use ($categorySlug) {
                     $subQuery->where('slug', $categorySlug);
+                });
+            })
+            ->when($minPrice, function ($query, $minPrice) {
+                $query->whereHas('variants', function ($subQuery) use ($minPrice) {
+                    $subQuery->where('price', '>=', $minPrice);
+                });
+            })
+            ->when($maxPrice, function ($query, $maxPrice) {
+                $query->whereHas('variants', function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('price', '<=', $maxPrice);
                 });
             })
             ->latest()

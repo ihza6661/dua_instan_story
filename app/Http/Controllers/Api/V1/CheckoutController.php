@@ -14,7 +14,7 @@ class CheckoutController extends Controller
     {
         try {
             $order = $checkoutService->processCheckout($request);
-            $order->load('items.product', 'items.customData');
+            $order->load('items.product', 'invitationDetail');
 
             return response()->json([
                 'message' => 'Pesanan Anda berhasil dibuat dan menunggu pembayaran.',

@@ -9,7 +9,7 @@ class StoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Auth::check();
+        return true;
     }
 
     public function rules(): array
@@ -32,7 +32,7 @@ class StoreRequest extends FormRequest
             'reception_location' => ['required', 'string', 'max:255'],
 
             'gmaps_link' => ['nullable', 'url', 'max:1000'],
-            'prewedding_photo' => ['nullable', 'image', 'max:5120'],
+            'prewedding_photo' => ['nullable', 'mimes:jpeg,png,bmp,gif,svg,webp', 'max:5120'],
         ];
     }
 
@@ -78,7 +78,7 @@ class StoreRequest extends FormRequest
             'reception_location.required' => 'Lokasi resepsi wajib diisi.',
 
             'gmaps_link.url' => 'Link Google Maps harus berupa URL yang valid.',
-            'prewedding_photo.image' => 'File foto pre-wedding harus berupa gambar (jpg, jpeg, png, dll).',
+            'prewedding_photo.mimes' => 'File foto pre-wedding harus berupa gambar (jpg, jpeg, png, bmp, gif, svg, webp).',
             'prewedding_photo.max' => 'Ukuran foto pre-wedding tidak boleh lebih dari 5MB.',
         ];
     }
