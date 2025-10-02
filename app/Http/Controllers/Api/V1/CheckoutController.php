@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Checkout\StoreRequest;
 use App\Http\Resources\OrderResource;
 use App\Services\CheckoutService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
@@ -20,6 +21,16 @@ class CheckoutController extends Controller
                 'message' => 'Pesanan Anda berhasil dibuat dan menunggu pembayaran.',
                 'data' => new OrderResource($order),
             ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function calculateShippingCost(Request $request, CheckoutService $checkoutService): JsonResponse
+    {
+        try {
+            $cost = $checkoutService->calculateShippingCost($request->all());
+            return response()->json($cost);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }

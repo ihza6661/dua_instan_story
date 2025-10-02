@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Admin\ProductCategory\StoreRequest;
 use App\Http\Requests\Api\V1\Admin\ProductCategory\UpdateRequest;
-use App\Http\Resources\ProductCategoryResource;
+use App\Http\Resources\AdminProductCategoryResource;
 use App\Models\ProductCategory;
 use App\Services\ProductCategoryService;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +15,7 @@ class ProductCategoryController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return ProductCategoryResource::collection(ProductCategory::latest()->get());
+        return AdminProductCategoryResource::collection(ProductCategory::latest()->get());
     }
 
     public function store(StoreRequest $request, ProductCategoryService $categoryService): JsonResponse
@@ -24,13 +24,13 @@ class ProductCategoryController extends Controller
 
         return response()->json([
             'message' => 'Kategori produk berhasil dibuat.',
-            'data' => new ProductCategoryResource($category),
+            'data' => new AdminProductCategoryResource($category),
         ], 201);
     }
 
-    public function show(ProductCategory $productCategory): ProductCategoryResource
+    public function show(ProductCategory $productCategory): AdminProductCategoryResource
     {
-        return new ProductCategoryResource($productCategory);
+        return new AdminProductCategoryResource($productCategory);
     }
 
     public function update(UpdateRequest $request, ProductCategory $productCategory, ProductCategoryService $categoryService): JsonResponse
@@ -39,7 +39,7 @@ class ProductCategoryController extends Controller
 
         return response()->json([
             'message' => 'Kategori produk berhasil diperbarui.',
-            'data' => new ProductCategoryResource($updatedCategory),
+            'data' => new AdminProductCategoryResource($updatedCategory),
         ]);
     }
 

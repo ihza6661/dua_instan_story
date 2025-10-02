@@ -7,9 +7,15 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CartItemController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+
+Route::post('/v1/checkout', [CheckoutController::class, 'store']);
+Route::post('/v1/shipping-cost', [CheckoutController::class, 'calculateShippingCost']);
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\OrderController;
-
 // Semua rute API berada di dalam prefix v1
 Route::prefix('v1')->group(function () {
 
@@ -17,6 +23,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/guest-checkout', [CheckoutController::class, 'store']);
+
+    Route::get('/rajaongkir/provinces', [App\Http\Controllers\Api\RajaOngkirController::class, 'getProvinces']);
+    Route::get('/rajaongkir/cities', [App\Http\Controllers\Api\RajaOngkirController::class, 'getCities']);
+    Route::get('/rajaongkir/subdistricts', [App\Http\Controllers\Api\RajaOngkirController::class, 'getSubdistricts']);
+    Route::post('/rajaongkir/cost', [App\Http\Controllers\Api\RajaOngkirController::class, 'calculateCost']);
+
+
+
+    
 
     Route::prefix('customer')->name('customer.v1.')->group(function () {
         Route::apiResource('products', Customer\ProductController::class)->only(['index', 'show']);

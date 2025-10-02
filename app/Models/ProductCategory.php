@@ -22,6 +22,9 @@ class ProductCategory extends Model
         return $this->hasMany(Product::class, 'category_id');
     }
 
+
+
+
     public function getImageUrlAttribute(): ?string
     {
         return $this->image ? Storage::disk('public')->url($this->image) : null;

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             AddOnSeeder::class,
             AttributeSeeder::class,
             ProductSeeder::class,
+            AdminUserSeeder::class,
         ]);
     }
 }

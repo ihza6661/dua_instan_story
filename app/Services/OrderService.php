@@ -18,6 +18,7 @@ class OrderService
     {
         return $user->orders()->with([
             'items.product.variants.images',
+            'items.product.variants',
             'items.variant.options',
             'invitationDetail',
         ])->latest()->get();
@@ -34,6 +35,7 @@ class OrderService
     {
         return $user->orders()->with([
             'items.product.variants.images',
+            'items.product.variants',
             'items.variant.options',
             'invitationDetail',
         ])->where('id', $orderId)->first();

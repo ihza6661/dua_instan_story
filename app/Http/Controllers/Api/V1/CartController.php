@@ -14,7 +14,7 @@ class CartController extends Controller
     public function show(Request $request, CartService $cartService): JsonResponse
     {
         $cart = $cartService->getCartContents($request);
-$cart->load('items.product.variants.images', 'items.product.category');
+$cart->load('items.variant.images', 'items.product');
         $response = (new CartResource($cart))->response();
 
         if (!Auth::check() && $cart->session_id) {

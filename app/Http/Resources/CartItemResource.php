@@ -16,6 +16,7 @@ class CartItemResource extends JsonResource
             'sub_total' => $this->quantity * $this->unit_price,
             'customizations' => $this->customization_details,
             'product' => new ProductResource($this->whenLoaded('product')),
+            'variant' => new ProductVariantResource($this->whenLoaded('variant')),
         ];
     }
 }

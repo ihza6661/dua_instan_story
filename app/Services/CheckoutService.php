@@ -8,8 +8,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+
+use Illuminate\Support\Facades\Auth;
+
 class CheckoutService
 {
+    protected $rajaOngkirService;
+
+    public function __construct(RajaOngkirService $rajaOngkirService)
+    {
+        $this->rajaOngkirService = $rajaOngkirService;
+    }
+
     public function processCheckout(Request $request): Order
     {
         $user = $request->user();
@@ -29,13 +39,20 @@ class CheckoutService
 
             $cartTotal = $cart->items->sum(fn($item) => $item->quantity * $item->unit_price);
 
+            $shippingCost = $validated['shipping_cost'] ?? 0;
+            $shippingService = $validated['shipping_service'] ?? null;
+            $courier = $validated['courier'] ?? null;
+
             // 1. Create the Order
             $order = Order::create([
                 'customer_id' => $user->id,
                 'order_number' => 'INV-' . time() . '-' . Str::upper(Str::random(4)),
-                'total_amount' => $cartTotal,
+                'total_amount' => $cartTotal + $shippingCost,
                 'shipping_address' => $validated['shipping_address'],
                 'order_status' => 'pending_payment',
+                'shipping_cost' => $shippingCost,
+                'shipping_service' => $shippingService,
+                'courier' => $courier,
             ]);
 
             // 2. Create the Invitation Detail
@@ -90,5 +107,28 @@ class CheckoutService
 
             return $order;
         });
+    }
+
+    public function calculateShippingCost(array $data)
+    {
+        $user = Auth::user();
+        $originCityId = $user->city_id;
+
+        if (!$originCityId) {
+            throw new \Exception('Alamat pengguna tidak lengkap. Mohon perbarui profil Anda.');
+        }
+
+        $response = $this->rajaOngkirService->getCost(
+            $originCityId,
+            $data['destination'],
+            $data['weight'],
+            $data['courier']
+        );
+
+        if (isset($response['rajaongkir']['status']['code']) && $response['rajaongkir']['status']['code'] == 200) {
+            return $response['rajaongkir'];
+        } else {
+            throw new \Exception('Gagal menghitung biaya pengiriman. Silakan coba lagi.');
+        }
     }
 }

@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\V1\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -31,14 +33,30 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // Simpan perubahan ke database
-        $user->update($request->validated());
+        $user->update($request->only(['full_name', 'email', 'phone_number']));
 
-        // ✅ PERBAIKAN: Kembalikan objek `$user` secara langsung
-        // Ini memastikan data terbaru yang baru saja disimpan dikirim ke frontend.
-        return response()->json([
+        $requestAddressData = $request->only(['address', 'province_name', 'city_name', 'postal_code']);
+
+        if (!empty(array_filter($requestAddressData))) {
+                Log::info('Updating address with data:', $requestAddressData);
+                $addressData = [
+                    'street' => $request->address,
+                    'city' => $request->city_name,
+                    'state' => $request->province_name,
+                    'postal_code' => $request->postal_code,
+                    'country' => 'Indonesia',
+                ];
+                Log::info('Prepared address data:', $addressData);
+                DB::enableQueryLog();
+                if ($user->address) {
+                    $user->address->update($addressData);
+                } else {
+                    $user->address()->create($addressData);
+                }
+                Log::info('DB Queries:', DB::getQueryLog());
+            }        return response()->json([
             'message' => 'Profile updated successfully.',
-            'data' => new UserResource($user),
+            'data' => new UserResource($user->load('address')),
         ]);
     }
 
