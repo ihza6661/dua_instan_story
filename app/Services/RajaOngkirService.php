@@ -24,7 +24,7 @@ class RajaOngkirService
 
         $response = Http::withHeaders([
             'key' => $this->apiKey,
-        ]);
+        ])->asForm();
 
         if (strtolower($method) === 'get' && !empty($data)) {
             $response = $response->get($url, $data);
@@ -66,13 +66,11 @@ class RajaOngkirService
         return $this->request('get', 'subdistrict', $data);
     }
 
-    public function getCost($origin, $destination, $weight, $courier, $originType = 'city', $destinationType = 'city')
+    public function getCost($origin, $destination, $weight, $courier)
     {
         $data = [
             'origin' => $origin,
-            'originType' => $originType,
             'destination' => $destination,
-            'destinationType' => $destinationType,
             'weight' => $weight, // in grams
             'courier' => $courier, // e.g., 'jne', 'pos', 'tiki'
         ];

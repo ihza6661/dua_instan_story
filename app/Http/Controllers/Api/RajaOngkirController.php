@@ -54,16 +54,13 @@ class RajaOngkirController extends Controller
             'destination' => 'required|numeric',
             'weight' => 'required|numeric|min:1',
             'courier' => 'required|string',
-            'originType' => 'sometimes|string|in:city,subdistrict',
-            'destinationType' => 'sometimes|string|in:city,subdistrict',
         ]);
 
         $originCityId = config('rajaongkir.origin_city_id');
         $destinationCityId = $request->input('destination');
         $weight = $request->input('weight');
         $courier = $request->input('courier');
-        $originType = $request->input('originType', 'city');
-        $destinationType = $request->input('destinationType', 'city');
+
 
         if (!$originCityId) {
             return response()->json(['error' => 'Origin city is not configured.'], 500);
@@ -73,16 +70,43 @@ class RajaOngkirController extends Controller
             $originCityId,
             $destinationCityId,
             $weight,
-            $courier,
-            $originType,
-            $destinationType
+            $courier
         );
 
-        if (!isset($response['rajaongkir'])) {
-            Log::error('Raja Ongkir API Error: "rajaongkir" key not found in response.', ['response' => $response]);
+        if (!isset($response['data'])) {
+            Log::error('Raja Ongkir API Error: "data" key not found in response.', ['response' => $response]);
             return response()->json(['error' => 'Failed to calculate shipping cost from Raja Ongkir.'], 500);
         }
 
-        return response()->json($response['rajaongkir'])->header('Access-Control-Allow-Origin', '*');
+        $transformedData = [];
+        if (is_array($response['data'])) {
+            foreach ($response['data'] as $service) {
+                $transformedData[] = [
+                    'service' => $service['service'],
+                    'description' => $service['description'],
+                    'cost' => [
+                        [
+                            'value' => $service['cost'],
+                            'etd' => $service['etd'],
+                            'note' => ''
+                        ]
+                    ]
+                ];
+            }
+        }
+
+        $transformedResponse = [
+            'rajaongkir' => [
+                'results' => [
+                    [
+                        'code' => $courier,
+                        'name' => $courier,
+                        'costs' => $transformedData
+                    ]
+                ]
+            ]
+        ];
+
+        return response()->json($transformedResponse)->header('Access-Control-Allow-Origin', '*');
     }
 }
