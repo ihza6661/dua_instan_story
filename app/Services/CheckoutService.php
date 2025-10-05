@@ -7,17 +7,17 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-
-
 use Illuminate\Support\Facades\Auth;
 
 class CheckoutService
 {
     protected $rajaOngkirService;
+    protected $midtransService;
 
-    public function __construct(RajaOngkirService $rajaOngkirService)
+    public function __construct(RajaOngkirService $rajaOngkirService, MidtransService $midtransService)
     {
         $this->rajaOngkirService = $rajaOngkirService;
+        $this->midtransService = $midtransService;
     }
 
     public function processCheckout(Request $request): Order
@@ -53,6 +53,7 @@ class CheckoutService
                 'shipping_cost' => $shippingCost,
                 'shipping_service' => $shippingService,
                 'courier' => $courier,
+                'payment_gateway' => 'midtrans',
             ]);
 
             // 2. Create the Invitation Detail
@@ -102,11 +103,21 @@ class CheckoutService
                 }
             }
 
-            // 4. Clear the cart
-            $cart->items()->delete();
+            // 4. Create Snap Token
+            $snapToken = $this->midtransService->createSnapToken($order);
+            $order->snap_token = $snapToken;
+            $order->save();
 
             return $order;
         });
+    }
+
+    public function clearCart($user)
+    {
+        $cart = $user->cart;
+        if ($cart) {
+            $cart->items()->delete();
+        }
     }
 
     public function calculateShippingCost(array $data)

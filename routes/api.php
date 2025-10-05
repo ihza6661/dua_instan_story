@@ -7,15 +7,20 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CartItemController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\WebhookController;
+use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\RajaOngkirController;
+use App\Http\Controllers\Api\V1\Admin\OrderController as AdminOrderController;
 
+Route::post('/v1/webhook/midtrans', [WebhookController::class, 'midtrans']);
 Route::post('/v1/checkout', [CheckoutController::class, 'store']);
 Route::post('/v1/shipping-cost', [CheckoutController::class, 'calculateShippingCost']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-use App\Http\Controllers\Api\V1\ProfileController;
-use App\Http\Controllers\Api\V1\OrderController;
+
 // Semua rute API berada di dalam prefix v1
 Route::prefix('v1')->group(function () {
 
@@ -24,14 +29,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/guest-checkout', [CheckoutController::class, 'store']);
 
-    Route::get('/rajaongkir/provinces', [App\Http\Controllers\Api\RajaOngkirController::class, 'getProvinces']);
-    Route::get('/rajaongkir/cities', [App\Http\Controllers\Api\RajaOngkirController::class, 'getCities']);
-    Route::get('/rajaongkir/subdistricts', [App\Http\Controllers\Api\RajaOngkirController::class, 'getSubdistricts']);
-    Route::post('/rajaongkir/cost', [App\Http\Controllers\Api\RajaOngkirController::class, 'calculateCost']);
-
-
-
-    
+    Route::get('/rajaongkir/provinces', [RajaOngkirController::class, 'getProvinces']);
+    Route::get('/rajaongkir/cities', [RajaOngkirController::class, 'getCities']);
+    Route::get('/rajaongkir/subdistricts', [RajaOngkirController::class, 'getSubdistricts']);
+    Route::post('/rajaongkir/cost', [RajaOngkirController::class, 'calculateCost']);
 
     Route::prefix('customer')->name('customer.v1.')->group(function () {
         Route::apiResource('products', Customer\ProductController::class)->only(['index', 'show']);
@@ -67,7 +68,7 @@ Route::prefix('v1')->group(function () {
 // --- Endpoint untuk Administrator (Admin) ---
 Route::prefix('v1/admin')
     ->middleware(['auth:sanctum', 'role:admin'])
-    ->name('admin.v1.')
+    ->name('api.v1.admin.')
     ->group(function () {
         Route::apiResource('users', Admin\UserController::class);
         Route::apiResource('product-categories', Admin\ProductCategoryController::class);
@@ -81,5 +82,7 @@ Route::prefix('v1/admin')
         Route::post('products/{product}/add-ons', [Admin\ProductAddOnController::class, 'store'])->name('products.addons.store');
         Route::delete('products/{product}/add-ons/{add_on}', [Admin\ProductAddOnController::class, 'destroy'])->name('products.addons.destroy');
         Route::apiResource('gallery-items', Admin\GalleryItemController::class);
-        Route::apiResource('orders', Admin\OrderController::class);
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
     });

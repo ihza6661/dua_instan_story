@@ -7,7 +7,7 @@ use App\Http\Requests\Api\V1\Admin\ProductVariant\StoreRequest;
 use App\Http\Requests\Api\V1\Admin\ProductVariant\UpdateRequest;
 use App\Http\Resources\ProductVariantResource;
 use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Models\ProductVariant as ModelProductVariant;
 use App\Services\ProductVariantService;
 use Illuminate\Http\JsonResponse;
 
@@ -33,13 +33,13 @@ class ProductVariantController extends Controller
         }
     }
 
-    public function show(ProductVariant $variant): ProductVariantResource
+    public function show(ModelProductVariant $variant): ProductVariantResource
     {
         $variant->load(['options.attribute', 'images']);
         return new ProductVariantResource($variant);
     }
 
-    public function update(UpdateRequest $request, ProductVariant $variant): JsonResponse
+    public function update(UpdateRequest $request, ModelProductVariant $variant): JsonResponse
     {
         $variant = $this->variantService->updateVariant($variant, $request->validated());
         return response()->json([
@@ -48,7 +48,7 @@ class ProductVariantController extends Controller
         ]);
     }
 
-    public function destroy(ProductVariant $variant): JsonResponse
+    public function destroy(ModelProductVariant $variant): JsonResponse
     {
         $this->variantService->deleteVariant($variant);
         return response()->json(['message' => 'Varian produk berhasil dihapus.']);

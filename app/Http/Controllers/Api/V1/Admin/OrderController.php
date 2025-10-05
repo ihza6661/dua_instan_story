@@ -11,7 +11,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['customer', 'items.product', 'items.variant'])->latest()->get();
+        $orders = Order::with(['customer', 'items.product', 'items.variant', 'shippingAddress', 'billingAddress'])->latest()->get();
 
         return OrderResource::collection($orders);
     }
@@ -19,6 +19,18 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load(['customer', 'items.product', 'items.variant', 'shippingAddress', 'billingAddress']);
+
+        return new OrderResource($order);
+    }
+
+    public function updateStatus(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|in:processing,packing,shipped,completed,cancelled',
+        ]);
+
+        $order->order_status = $request->input('status');
+        $order->save();
 
         return new OrderResource($order);
     }

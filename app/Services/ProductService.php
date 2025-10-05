@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Product;
+use App\Models\ProductVariant as ModelProductVariant;
 use App\Models\ProductImage;
-use App\Models\ProductVariant;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -40,7 +41,7 @@ class ProductService
         $product->delete();
     }
 
-    public function addImageToVariant(ProductVariant $variant, UploadedFile $imageFile, array $data): ProductImage
+    public function addImageToVariant(ModelProductVariant $variant, UploadedFile $imageFile, array $data): ProductImage
     {
         $path = $imageFile->store('product-images', 'public');
 
@@ -61,9 +62,9 @@ class ProductService
         $image->delete();
     }
 
-    public function getPaginatedActiveProducts(?string $searchTerm = null, ?string $categorySlug = null, ?string $minPrice = null, ?string $maxPrice = null): LengthAwarePaginator
+    public function getPaginatedActiveProducts(?string $searchTerm = null, ?string $categorySlug = null, ?string $minPrice = null, ?string $maxPrice = null, ?string $sort = 'latest'): LengthAwarePaginator
     {
-        return Product::with(['category', 'variants.images'])
+        $query = Product::with(['category', 'variants.images'])
             ->where('is_active', true)
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->where(function ($subQuery) use ($searchTerm) {
@@ -85,9 +86,18 @@ class ProductService
                 $query->whereHas('variants', function ($subQuery) use ($maxPrice) {
                     $subQuery->where('price', '<=', $maxPrice);
                 });
-            })
-            ->latest()
-            ->paginate(10);
+            });
+
+        if ($sort === 'price_asc' || $sort === 'price_desc') {
+            $query->addSelect(['min_price' => ModelProductVariant::selectRaw('MIN(price)')
+                ->whereColumn('product_id', 'products.id')
+                ->take(1)
+            ])->orderBy('min_price', $sort === 'price_asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        return $query->paginate(10);
     }
 
     public function findPubliclyVisibleProduct(int $productId): Product

@@ -25,8 +25,9 @@ class ProductController extends Controller
         $categorySlug = $request->query('category');
         $minPrice = $request->query('min_price');
         $maxPrice = $request->query('max_price');
+        $sort = $request->query('sort');
 
-        $products = $this->productService->getPaginatedActiveProducts($searchTerm, $categorySlug, $minPrice, $maxPrice);
+        $products = $this->productService->getPaginatedActiveProducts($searchTerm, $categorySlug, $minPrice, $maxPrice, $sort);
 
         return ProductResource::collection($products);
     }

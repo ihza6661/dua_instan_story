@@ -17,12 +17,12 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->customer_id,
-            'user_full_name' => $this->customer->full_name ?? null,
-            'status' => $this->order_status,
+            'user_full_name' => $this->customer?->full_name,
+            'order_status' => $this->order_status,
             'total_amount' => $this->total_amount,
             'created_at' => $this->created_at,
-            'shipping_address' => $this->shippingAddress ? $this->shippingAddress->full_address : null,
-            'billing_address' => $this->billingAddress ? $this->billingAddress->full_address : null,
+            'shipping_address' => $this->shipping_address,
+            'billing_address' => $this->billingAddress?->full_address,
             'order_items' => OrderItemResource::collection($this->whenLoaded('items')),
         ];
     }
