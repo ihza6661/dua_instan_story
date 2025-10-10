@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\V1\Admin\InvitationDetailResource;
 
 class OrderResource extends JsonResource
 {
@@ -24,6 +25,7 @@ class OrderResource extends JsonResource
             'shipping_address' => $this->shipping_address,
             'billing_address' => $this->billingAddress?->full_address,
             'order_items' => OrderItemResource::collection($this->whenLoaded('items')),
+            'invitation_detail' => new InvitationDetailResource($this->whenLoaded('invitationDetail')),
         ];
     }
 }

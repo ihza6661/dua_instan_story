@@ -13,6 +13,7 @@ class MidtransService
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = config('midtrans.is_sanitized');
         Config::$is3ds = config('midtrans.is_3ds');
+        Config::$overrideNotifUrl = config('midtrans.notification_url');
     }
 
     public function createSnapToken($order)
