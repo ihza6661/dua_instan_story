@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
+
 use App\Models\Product;
 use App\Models\ProductVariant as ModelProductVariant;
 use App\Models\ProductImage;
@@ -88,13 +88,19 @@ class ProductService
                 });
             });
 
-        if ($sort === 'price_asc' || $sort === 'price_desc') {
-            $query->addSelect(['min_price' => ModelProductVariant::selectRaw('MIN(price)')
-                ->whereColumn('product_id', 'products.id')
-                ->take(1)
-            ])->orderBy('min_price', $sort === 'price_asc' ? 'asc' : 'desc');
-        } else {
-            $query->latest();
+        switch ($sort) {
+            case 'price_asc':
+            case 'price_desc':
+                $query->addSelect([
+                    'min_price' => ModelProductVariant::selectRaw('MIN(price)')
+                        ->whereColumn('product_id', 'products.id')
+                        ->take(1)
+                ])->orderBy('min_price', $sort === 'price_asc' ? 'asc' : 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
         return $query->paginate(10);

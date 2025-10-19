@@ -10,11 +10,20 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            AdminUserSeeder::class,
             ProductCategorySeeder::class,
             AddOnSeeder::class,
             AttributeSeeder::class,
-            ProductSeeder::class,
-            AdminUserSeeder::class,
+
+            // Seeders generated from current database
+            ProductsTableSeeder::class,
+            ProductVariantsTableSeeder::class,
+            ProductAddOnsTableSeeder::class,
+            ProductVariantOptionsTableSeeder::class,
         ]);
+        $this->call(ProductsTableSeeder::class);
+        $this->call(ProductVariantsTableSeeder::class);
+        $this->call(ProductAddOnsTableSeeder::class);
+        $this->call(ProductVariantOptionsTableSeeder::class);
     }
 }

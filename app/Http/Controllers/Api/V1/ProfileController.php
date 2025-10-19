@@ -54,6 +54,10 @@ class ProfileController extends Controller
                     $user->address()->create($addressData);
                 }
                 Log::info('DB Queries:', DB::getQueryLog());
+            } else {
+                if ($user->address) {
+                    $user->address()->delete();
+                }
             }        return response()->json([
             'message' => 'Profile updated successfully.',
             'data' => new UserResource($user->load('address')),
