@@ -20,10 +20,7 @@ class DatabaseSeeder extends Seeder
             ProductVariantsTableSeeder::class,
             ProductAddOnsTableSeeder::class,
             ProductVariantOptionsTableSeeder::class,
+            ProductImageSeeder::class,
         ]);
-        $this->call(ProductsTableSeeder::class);
-        $this->call(ProductVariantsTableSeeder::class);
-        $this->call(ProductAddOnsTableSeeder::class);
-        $this->call(ProductVariantOptionsTableSeeder::class);
     }
 }

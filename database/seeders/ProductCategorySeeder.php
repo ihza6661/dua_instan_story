@@ -10,14 +10,18 @@ class ProductCategorySeeder extends Seeder
 {
     public function run(): void
     {
-        ProductCategory::create([
-            'name' => 'Undangan Pernikahan',
+        ProductCategory::updateOrCreate([
             'slug' => Str::slug('Undangan Pernikahan'),
+        ], [
+            'name' => 'Undangan Pernikahan',
+            'image' => 'category-images/wedding.jpg',
         ]);
 
-        ProductCategory::create([
-            'name' => 'Buku Tamu',
+        ProductCategory::updateOrCreate([
             'slug' => Str::slug('Buku Tamu'),
+        ], [
+            'name' => 'Buku Tamu',
+            'image' => 'category-images/guestbook.jpg',
         ]);
     }
 }
