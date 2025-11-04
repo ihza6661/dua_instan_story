@@ -21,18 +21,23 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $admins = User::where('role', 'admin')->latest()->get();
-        return UserResource::collection($admins);
+        $role = $request->query('role', 'admin');
+        $users = User::where('role', $role)->latest()->get();
+        return UserResource::collection($users);
     }
 
     public function store(StoreRequest $request): JsonResponse
     {
-        $admin = $this->userService->createAdminUser($request->validated());
+        $validatedData = $request->validated();
+        $role = $request->input('role', 'admin');
+
+        $user = $this->userService->createUser($validatedData, $role);
+
         return response()->json([
-            'message' => 'Akun admin berhasil dibuat.',
-            'data' => new UserResource($admin),
+            'message' => 'Akun ' . $role . ' berhasil dibuat.',
+            'data' => new UserResource($user),
         ], 201);
     }
 

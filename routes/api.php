@@ -12,6 +12,10 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\RajaOngkirController;
 use App\Http\Controllers\Api\V1\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Api\V1\Admin\DashboardController;
+use Illuminate\Support\Facades\DB;
+
+
 
 Route::post('/v1/webhook/midtrans', [WebhookController::class, 'midtrans']);
 Route::post('/v1/checkout', [CheckoutController::class, 'store']);
@@ -85,4 +89,5 @@ Route::prefix('v1/admin')
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     });

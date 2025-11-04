@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function createAdminUser(array $data): User
+    public function createUser(array $data, string $role = 'customer'): User
     {
         return User::create([
             'full_name' => $data['full_name'],
             'email' => $data['email'],
             'phone_number' => $data['phone_number'] ?? null,
             'password' => Hash::make($data['password']),
-            'role' => 'admin',
+            'role' => $role,
         ]);
     }
 
