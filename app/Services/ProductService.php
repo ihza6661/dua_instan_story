@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-
 use App\Models\Product;
 use App\Models\ProductVariant as ModelProductVariant;
 use App\Models\ProductImage;
@@ -43,7 +42,15 @@ class ProductService
 
     public function addImageToVariant(ModelProductVariant $variant, UploadedFile $imageFile, array $data): ProductImage
     {
-        $path = $imageFile->store('product-images', 'public');
+        // Ensure the product-images directory exists
+        $directory = 'product-images';
+        $disk = Storage::disk('public');
+        
+        if (!$disk->exists($directory)) {
+            $disk->makeDirectory($directory, 0777, true);
+        }
+        
+        $path = $imageFile->store($directory, 'public');
 
         if (!empty($data['is_featured'])) {
             $variant->images()->where('is_featured', true)->update(['is_featured' => false]);
