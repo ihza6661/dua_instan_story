@@ -1,25 +1,4 @@
 <?php
-/*
-|--------------------------------------------------------------------------
-| Copilot Code Review Prompt (Line-by-Line)
-|--------------------------------------------------------------------------
-| File: CheckoutService.php
-| Context:
-| - Laravel project with Midtrans payments.
-| - Added Down Payment (DP) system: 50% DP + 50% final payment.
-| - Migration: 2025_11_08_192217_update_orders_and_payments_for_dp_system.php
-| - New order_status: Pending, Partially Paid, Paid, Processing, Shipped, Delivered, Cancelled
-|
-| Instructions for Copilot:
-| 1. Review the CheckoutService code line by line.
-| 2. Check if DP and final payment logic is correctly implemented.
-| 3. Verify order_status transitions follow: Pending → Partially Paid → Paid → Processing → Shipped → Delivered → Completed
-| 4. Ensure Payment records are created with correct payment_type and status updates.
-| 5. Check Midtrans Snap token generation for DP and final payments.
-| 6. Identify any missing logic, edge cases, or potential bugs.
-| 7. Suggest improvements for cleaner, maintainable, and safe code.
-| 8. Provide comments inline as if mentoring a junior developer.
-*/
 
 namespace App\Services;
 
